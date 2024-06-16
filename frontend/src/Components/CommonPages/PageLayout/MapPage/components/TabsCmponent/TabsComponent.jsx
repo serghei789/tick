@@ -15,6 +15,8 @@ import {EditModal as EditModelModal} from "../../../controlPanelPages/ModelsPage
 import {EditModal as EditRequestModal} from "../../../controlPanelPages/RequestsPage/components/EditModal/EditModal";
 import SailingSectionsTable from "../../../controlPanelPages/SailingSectionPage/components/DataTable/DataTableComponent";
 import {EditModal as EditSailingSectionModal} from "../../../controlPanelPages/SailingSectionPage/components/EditModal/EditModal";
+import InitPlacementsTable from "../../../controlPanelPages/InitPlacementsPage/components/DataTable/DataTableComponent";
+import {EditModal as EditInitPlacementModal} from "../../../controlPanelPages/InitPlacementsPage/components/EditModal/EditModal";
 
 export const TabsComponent = () => {
 
@@ -80,6 +82,8 @@ export const TabsComponent = () => {
                     <TabPane tabId="4" style={{paddingTop: 40}}>
                         <P attrPara={{ className: 'mb-0' }}></P>
                         <P attrPara={{ className: 'mb-0' }}></P>
+                        <InitPlacementsTable />
+                        <EditInitPlacementModal />
                     </TabPane>
                     <TabPane tabId="7" style={{paddingTop: 40}}>
                         <P attrPara={{ className: 'mb-0' }}></P>

@@ -288,7 +288,7 @@
 
   <div class="col-md-3 mb-3">
   <label class="form-label">Корабль</label>
-  <select class="selectpicker form-control" name="ships[]" multiple title="Выбрать" aria-label="" data-live-search="true">
+  <select class="selectpicker form-control" name="ships[]" id="jsShipsImo" multiple title="Выбрать" aria-label="" data-live-search="true">
        <?if(!empty($shipsList)):?>
        <?foreach($shipsList as $imo=>$val):?>
        <option value="<?=$imo;?>"><?=$val;?></option>
@@ -354,7 +354,7 @@
   
   <div class="col-md-3">
   <label class="form-label">Модель</label>
-  <select class="form-control" name="model_id">
+  <select class="form-control" name="model_id" id="jsFilterModelId">
       <?if($models!=false):?>
        <?foreach($models as $key=>$val):?>
        <option value="<?=$val['model_id'];?>"<?if($val['model_id']==1):?> selected=""<?endif;?>><?=$val['model_name'];?></option>
@@ -386,6 +386,18 @@
 <div id="jsAjaxLoad">
 <?include $_SERVER['DOCUMENT_ROOT'].'/backend/modules/'.$moduleName.'/includes/map.inc.php';?>
 </div> 
+
+<form method="post" action="" id="form_jsShowRoutesTable" class="hidden">
+     <input type="hidden" name="module" value="<?=$moduleName;?>" />
+     <input type="hidden" name="component" value="" />
+     <input type="hidden" name="model_id" id="jsModelId" value="<?=$model_id;?>" />
+     <input type="hidden" name="raiting_id" id="jsRaitinglId" value="<?=$raiting_id;?>" />
+     <input type="hidden" name="id_interval" id="jsIntervalId" value="<?=$minInterval;?>" />
+     <input type="hidden" name="imo" id="jsImoList" value="" />
+     <input type="hidden" name="ajaxLoad" value="jsAjaxRoutesTables" />
+     <input type="hidden" name="alert" value="" />
+     <button class="send_form" id="jsShowRoutesTable"></button>
+</form>
 
 
 <div id="jsMapButtonsLoader" class="hidden">

@@ -26,8 +26,12 @@ export const ModelSpeed = 'Скорость';
 export const ModelLateArrival = 'Опоздание';
 
 // sailing sections
-export const EditSailingSection = 'Изменение модели';
+export const EditSailingSection = 'Изменение пункта сбора';
 export const SailingSectionName = 'Название';
+
+// init placements
+export const EditInitPlacement = 'Изменение расположения';
+export const InitPlacementName = 'Название';
 
 // conditions
 export const EditCondition = 'Изменение';

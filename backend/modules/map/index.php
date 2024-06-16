@@ -1,20 +1,22 @@
 <?php
  $moduleName = clearData($_GET['mod'],'get');
+ $imoRoutesTable = null;
  $imoVal = null;
  $start = microtime(true);
   
  $filter = null;
  $model_id = 1;
+ $raiting_id = 1;
  
  $filter = " AND tr.raiting=1 ";
  
  // фильтры по get параметрам из url
- if (!empty($_GET['point_a']) && $_GET['point_a']!='null') {
+ if (!empty($_GET['point_a']) && $_GET['point_a']!='null' && $_GET['point_a']!='undefined') {
     $get = urldecode($_GET['point_a']);
     $filter .= " AND wl.point_a='".$get."' ";
  }
  
- if (!empty($_GET['point_b']) && $_GET['point_b']!='null') {
+ if (!empty($_GET['point_b']) && $_GET['point_b']!='null'&& $_GET['point_b']!='undefined') {
     $get = urldecode($_GET['point_b']);
     $filter .= " AND wl.point_b='".$get."' ";
  }
@@ -22,6 +24,7 @@
   if (!empty($_GET['imo'])) {
     $get = clearData($_GET['imo'],'int');
     $filter .= " AND cl.imo='".$get."' ";
+    $imoRoutesTable = $get;
   }
   
   //exit($filter);

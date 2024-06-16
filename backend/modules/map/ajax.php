@@ -2,6 +2,57 @@
 
 $moduleName = clearData($_POST['module'],'get');
 
+// таблица с кораблями под картой
+if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsShowRoutesTable') {
+    
+    $routesFilter = null;
+    
+    $raiting_id = $_POST['raiting_id'];
+    $id_interval = intval($_POST['id_interval']);
+    $model_id = intval($_POST['model_id']);
+    $imo = null;
+    
+    if (!empty($_POST['imo'])) {
+        $imo = clearData($_POST['imo']);
+        $routesFilter = " AND ss.imo IN (".$imo.") ";
+    }
+    
+    $rt = db_query("SELECT DISTINCT
+    wp.point_a, 
+    wp.datetime_start, 
+    wp.point_b, 
+    wp.datetime_end, 
+    ss.name, 
+    ss.iceclass,
+    tr.distance/1000 AS distance, 
+    (tr.time/3600) AS time, 
+    (tr.distance/tr.time) AS speed 
+    FROM schedule AS s 
+    JOIN caravan_list as cl ON cl.caravan_id = s.caravan_id AND cl.model_id = cl.model_id 
+    INNER JOIN ships as ss ON ss.imo = cl.imo 
+    INNER JOIN wish_list_parts as wp ON wp.caravan_id = cl.caravan_id AND wp.model_id = s.model_id AND wp.point_a = s.point_a AND wp.point_b = s.point_b 
+    AND wp.datetime_start = s.datetime_start 
+    INNER JOIN trace_intervals AS t ON t.caravan_id = cl.caravan_id 
+    INNER JOIN time_intervals as ti ON ti.id = t.id_interval 
+    INNER JOIN trace_raiting as tr ON tr.caravan_id = t.caravan_id AND tr.route_id = t.route_id AND tr.version = t.version 
+    WHERE s.model_id=".$model_id." 
+    AND tr.raiting=".$raiting_id." 
+    AND t.id_interval=".$id_interval." 
+    ".$routesFilter."
+    ORDER BY t.id_interval");
+    
+    if ($rt != false) {
+        // подключаем шаблон таб. и заполняем его данными
+        ob_start();
+        include $_SERVER['DOCUMENT_ROOT'].'/backend/modules/map/includes/routesTable.inc.php';
+        $routesTable = ob_get_clean();
+        exit($routesTable);
+    }
+    
+    exit('');
+}
+
+
 // запрос на пересчитывание маршрутов
 if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsEditRoutes') {
     
@@ -122,6 +173,8 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsMapFilters') {
     $typeMap = 1;
     $model_id = 1;
     $imoVal = null;
+    $raiting_id = 1;
+    $imoRoutesTable = null;
     
     if (!empty($_POST['model_id'])) {
         $model_id = intval($_POST['model_id']);
@@ -142,6 +195,7 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsMapFilters') {
         }
         
         $shipsList = trim($shipsList,',');
+        $imoRoutesTable = $shipsList;
         
         // фильтруем маршруты по кораблям
         $filter .= " AND cl.imo IN (".$shipsList.") ";

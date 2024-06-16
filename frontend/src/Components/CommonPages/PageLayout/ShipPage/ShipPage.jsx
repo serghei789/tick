@@ -1,7 +1,6 @@
 import React, {Fragment, useEffect, useState} from 'react';
 import { Card, CardBody, Col, Container, Row } from 'reactstrap';
 import {useParams} from "react-router";
-import ColumnInfoCard from "./components/ColumnInfoCard/ColumndInfoCard";
 import ShipInfo from "./components/ShipInfo/ShipInfo";
 import { Breadcrumbs } from "../../../../AbstractElements";
 import axios from "axios";

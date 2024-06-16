@@ -8,6 +8,7 @@ import {ModelsProvider} from "./_helper/Models/ModelsProvider";
 import {ConditionsProvider} from "./_helper/Conditions/ConditionsProvider";
 import {ShipsProvider} from "./_helper/Ships/ShipsProvider";
 import {SailingSectionsProvider} from "./_helper/SailingSections/SailingSectionsProvider";
+import {InitPlacementsProvider} from "./_helper/InitPlacements/InitPlacementsProvider";
 
 const App = () => (
   <div className='App'>
@@ -18,11 +19,11 @@ const App = () => (
             <ConditionsProvider>
               <ShipsProvider>
                 <SailingSectionsProvider>
-                  {/*<PlacementInitProvider>*/}
+                  <InitPlacementsProvider>
                     <AnimationThemeProvider>
                       <Routers />
                     </AnimationThemeProvider>
-                  {/*</PlacementInitProvider>*/}
+                  </InitPlacementsProvider>
                 </SailingSectionsProvider>
               </ShipsProvider>
             </ConditionsProvider>

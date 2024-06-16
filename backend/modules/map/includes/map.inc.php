@@ -14,8 +14,8 @@
 
 <div class="mt-2" id="map" style="width:100%; height: 550px;"></div>
 
-<div class="w-100">
-<iframe frameborder="0" src="https://datalens.yandex/bxp95u8cxmuuz?id_interval=<?=$minInterval;?>&model_id=<?=$model_id;?><?=$imoVal;?>" id="jsFrame" width="100%" height="2000px"></iframe>
+<div id="jsAjaxRoutesTables">
+<?=$routesTable;?>
 </div>
 
 <script type="text/javascript">
@@ -258,6 +258,18 @@
           var frameUrl = 'https://datalens.yandex/bxp95u8cxmuuz?id_interval='+selection+'&model_id=<?=$model_id;?><?=$imoVal;?>';
           $('#jsFrame').attr('src',frameUrl); 
        }
+       
+       // функция, для обновления данных в таблице маршрутов
+       function changeRoutesTable(selection) {
+          // берём данные из формы с фильтрами
+          var model_id = $('#jsFilterModelId').val();
+          var imoList = $('#jsShipsImo').val();
+          
+          $('#jsModelId').val(model_id);
+          $('#jsImoList').val(imoList);
+          $('#jsIntervalId').val(selection);
+          $('#jsShowRoutesTable').click();
+       }
 
        $("#polzunok").slider({
          min: <?=$minInterval;?>,
@@ -266,7 +278,8 @@
          animate: "fast",
          range: "min",
          stop: function( event, ui ) { 
-            changeIframe(ui.value);
+            changeRoutesTable(ui.value);
+            //changeIframe(ui.value);
          },
          slide: function( event, ui ) { 
             changeMap(ui.value);
@@ -287,7 +300,8 @@
                     clearInterval(intervalId);
                     
                     var selection2 = $("#polzunok").slider( "value" );
-                    changeIframe(selection2);
+                    changeRoutesTable(selection2);
+                    //changeIframe(selection2);
                     
                     tt.text('Старт').attr('data-status','1');
                     return false;
@@ -314,7 +328,8 @@
                clearInterval(intID);
             
                var selection2 = $("#polzunok").slider( "value" );
-               changeIframe(selection2);
+               changeRoutesTable(selection2);
+               //changeIframe(selection2);
 
                tt.text('Старт').attr('data-status','1');
            }
@@ -332,7 +347,8 @@
              // производим изменения на карте
              changeMap(interval_id);
              // меняем дашборд под картой
-             changeIframe(interval_id);
+             changeRoutesTable(interval_id);
+             //changeIframe(interval_id);
            }
        });
         <?endif;?>

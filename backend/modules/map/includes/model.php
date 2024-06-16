@@ -1,5 +1,6 @@
 <?php
     $result = false;
+    $routesTable = null;
 
      // для фильтров
     $pointA = array();
@@ -44,7 +45,7 @@ INNER JOIN wish_list as wl ON wl.id = wp.id
 inner JOIN trace_intervals AS t ON t.caravan_id = cl.caravan_id 
 inner JOIN time_intervals as ti ON ti.id = t.id_interval 
 inner JOIN trace_raiting as tr ON tr.caravan_id = t.caravan_id AND tr.route_id = t.route_id AND tr.version = t.version 
-WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval";
+WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval, ss.iceclass";
  /*   
     $sql = "SELECT t.*,
     ti.datetime_start,
@@ -467,4 +468,53 @@ WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval";
        $mapPointsJson = json_encode($mapPointsJson,true);
         
     }
+    
+    // достаём данные по таб. под картой
+    $routesFilter = null;
+    
+    if (!empty($imoRoutesTable)) {
+        
+        if (preg_match('/,/',$imoRoutesTable)) {
+            $routesFilter = " AND ss.imo IN (".$imoRoutesTable.") ";
+        }
+        
+        else {
+            $routesFilter = " AND ss.imo='".$imoRoutesTable."' ";
+        }
+        
+    }
+    
+    $rt = db_query("SELECT DISTINCT
+    wp.point_a, 
+    wp.datetime_start, 
+    wp.point_b, 
+    wp.datetime_end, 
+    ss.name, 
+    ss.iceclass,
+    tr.distance/1000 AS distance, 
+    (tr.time/3600) AS time, 
+    (tr.distance/tr.time) AS speed 
+    FROM schedule AS s 
+    JOIN caravan_list as cl ON cl.caravan_id = s.caravan_id AND cl.model_id = cl.model_id 
+    INNER JOIN ships as ss ON ss.imo = cl.imo 
+    INNER JOIN wish_list_parts as wp ON wp.caravan_id = cl.caravan_id AND wp.model_id = s.model_id AND wp.point_a = s.point_a AND wp.point_b = s.point_b 
+    AND wp.datetime_start = s.datetime_start 
+    INNER JOIN trace_intervals AS t ON t.caravan_id = cl.caravan_id 
+    INNER JOIN time_intervals as ti ON ti.id = t.id_interval 
+    INNER JOIN trace_raiting as tr ON tr.caravan_id = t.caravan_id AND tr.route_id = t.route_id AND tr.version = t.version 
+    WHERE s.model_id=".$model_id." 
+    AND tr.raiting=".$raiting_id." 
+    AND t.id_interval=".$minInterval." 
+    ".$routesFilter."
+    ORDER BY t.id_interval");
+    
+    if ($rt != false) {
+        // подключаем шаблон таб. и заполняем его данными
+        ob_start();
+        include $_SERVER['DOCUMENT_ROOT'].'/backend/modules/map/includes/routesTable.inc.php';
+        $routesTable = ob_get_clean();
+    }
+    
+    
+    
 }
