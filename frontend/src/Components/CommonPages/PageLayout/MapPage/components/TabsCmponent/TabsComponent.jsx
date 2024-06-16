@@ -13,6 +13,8 @@ import RequestsTable from "../../../controlPanelPages/RequestsPage/components/Da
 import {ConditionsPanel} from "../../../controlPanelPages/ConditionsPage/components/ConditionsPanel";
 import {EditModal as EditModelModal} from "../../../controlPanelPages/ModelsPage/components/EditModal/EditModal";
 import {EditModal as EditRequestModal} from "../../../controlPanelPages/RequestsPage/components/EditModal/EditModal";
+import SailingSectionsTable from "../../../controlPanelPages/SailingSectionPage/components/DataTable/DataTableComponent";
+import {EditModal as EditSailingSectionModal} from "../../../controlPanelPages/SailingSectionPage/components/EditModal/EditModal";
 
 export const TabsComponent = () => {
 
@@ -46,16 +48,16 @@ export const TabsComponent = () => {
                             {/*{contactIcon ? item.contactIcon : ''} */}Пункты сбора
                         </NavLink>
                     </NavItem>
-                    <NavItem>
-                        <NavLink className={activeTab === '5' ? 'active' : ''} onClick={() => setActiveTab('5')}>
-                            {/*{contactIcon ? item.contactIcon : ''} */}Ледовая обстановка
-                        </NavLink>
-                    </NavItem>
-                    <NavItem>
-                        <NavLink className={activeTab === '6' ? 'active' : ''} onClick={() => setActiveTab('6')}>
-                            {/*{contactIcon ? item.contactIcon : ''} */}Корабли
-                        </NavLink>
-                    </NavItem>
+                    {/*<NavItem>*/}
+                    {/*    <NavLink className={activeTab === '5' ? 'active' : ''} onClick={() => setActiveTab('5')}>*/}
+                    {/*        /!*{contactIcon ? item.contactIcon : ''} *!/Ледовая обстановка*/}
+                    {/*    </NavLink>*/}
+                    {/*</NavItem>*/}
+                    {/*<NavItem>*/}
+                    {/*    <NavLink className={activeTab === '6' ? 'active' : ''} onClick={() => setActiveTab('6')}>*/}
+                    {/*        /!*{contactIcon ? item.contactIcon : ''} *!/Корабли*/}
+                    {/*    </NavLink>*/}
+                    {/*</NavItem>*/}
                 </Nav>
                 <TabContent activeTab={activeTab}>
                     <TabPane tabId="1" style={{paddingTop: 40}}>
@@ -82,15 +84,17 @@ export const TabsComponent = () => {
                     <TabPane tabId="7" style={{paddingTop: 40}}>
                         <P attrPara={{ className: 'mb-0' }}></P>
                         <P attrPara={{ className: 'mb-0' }}></P>
+                        <SailingSectionsTable />
+                        <EditSailingSectionModal />
                     </TabPane>
-                    <TabPane tabId="5" style={{paddingTop: 40}}>
-                        <P attrPara={{ className: 'mb-0' }}></P>
-                        <P attrPara={{ className: 'mb-0' }}></P>
-                    </TabPane>
-                    <TabPane tabId="6" style={{paddingTop: 40}}>
-                        <P attrPara={{ className: 'mb-0' }}></P>
-                        <P attrPara={{ className: 'mb-0' }}></P>
-                    </TabPane>
+                    {/*<TabPane tabId="5" style={{paddingTop: 40}}>*/}
+                    {/*    <P attrPara={{ className: 'mb-0' }}></P>*/}
+                    {/*    <P attrPara={{ className: 'mb-0' }}></P>*/}
+                    {/*</TabPane>*/}
+                    {/*<TabPane tabId="6" style={{paddingTop: 40}}>*/}
+                    {/*    <P attrPara={{ className: 'mb-0' }}></P>*/}
+                    {/*    <P attrPara={{ className: 'mb-0' }}></P>*/}
+                    {/*</TabPane>*/}
                 </TabContent>
             </div>
         </div>

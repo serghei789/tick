@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {ModelsContext} from './index';
-import {getModels, updateModel, createModel, deleteModel} from "../../api/methods/models";
+import {getModels, updateModel, createModel, deleteModel, resetModels} from "../../api/methods/models";
 
 export const ModelsProvider = (props) => {
   const [models, setModels] = useState([]);
@@ -37,6 +37,14 @@ export const ModelsProvider = (props) => {
         }
     };
 
+    const reset = () => {
+        resetModels().then(() => {
+            getModels().then(resp => {
+                setModels(resp);
+            });
+        });
+    };
+
   useEffect(() => {
     getModels().then(resp => {
         setModels(resp);
@@ -56,7 +64,8 @@ export const ModelsProvider = (props) => {
         modelModalToggle,
         createModel: create,
         updateModel: update,
-        deleteModel: remove
+        deleteModel: remove,
+          reset
       }}
     >
       {props.children}

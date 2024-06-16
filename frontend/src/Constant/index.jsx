@@ -25,6 +25,10 @@ export const ModelTime = 'Время в пути';
 export const ModelSpeed = 'Скорость';
 export const ModelLateArrival = 'Опоздание';
 
+// sailing sections
+export const EditSailingSection = 'Изменение модели';
+export const SailingSectionName = 'Название';
+
 // conditions
 export const EditCondition = 'Изменение';
 export const ConditionName = 'Название';

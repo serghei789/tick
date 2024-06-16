@@ -1,10 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Gantt, ViewMode} from "gantt-task-react";
 import {TooltipContent} from "./TooltipContent";
 import axios from "axios";
 import {ScheduleApi} from "../../../../../api";
 import {Input} from "reactstrap";
 import "gantt-task-react/dist/index.css";
+import {useParams} from "react-router";
+import {ShipsContext} from "../../../../../_helper/Ships";
 
 let trips = []
 let shipFilterOptions = ['Штурман Альбанов', 'Штурман Кошелев']
@@ -42,6 +44,10 @@ export const ScheduleChart = () => {
     const [time, setTime] = useState('Day');
     const [filteredTrips, setFilteredTrips] = useState([]);
 
+    const {ships} = useContext(ShipsContext)
+
+    const {imo} = useParams()
+
     useEffect(() => {
         let filtered = trips.filter(trip => trip.model_id === modelFilter)
         if(shipFilter !== '') {
@@ -52,7 +58,7 @@ export const ScheduleChart = () => {
 
     useEffect(() => {
         getTrips().then((res) => {
-            trips = res.sort((a, b) => a.start < b.start).map((trip, index) => {
+            trips = res.sort((a, b) => a.start < b.start).map((trip) => {
                 return {
                     ...trip,
                     start: new Date(+trip.start),
@@ -70,6 +76,13 @@ export const ScheduleChart = () => {
         })
     }, []);
 
+    useEffect(() => {
+        if(imo){
+            const ship = ships.find(item => item.imo === imo)
+            const option = shipFilterOptions.find(item => item.includes(ship?.name))
+            if(option) setShipFilter(option)
+        }
+    }, [ships]);
     return (<>
             <div style={{display: 'flex', justifyContent: 'space-between'}}>
                 <div style={{width:'40%'}}>

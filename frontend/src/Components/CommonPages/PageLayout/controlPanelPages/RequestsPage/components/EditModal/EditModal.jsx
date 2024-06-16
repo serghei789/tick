@@ -3,8 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Form, FormGroup, Label, Button, Modal, ModalBody, ModalHeader } from 'reactstrap';
 import { Btn } from '../../../../../../../AbstractElements';
 import {
-    Cancel, Create, CreateRequest, EditRequest, EndDate, IceClass,
-    Imo, MaxSpeed, PointA, PointB,
+    Cancel, Create, CreateRequest, EditRequest, EndDate, PointA, PointB,
     Save, Ship, StartDate,
 
 } from '../../../../../../../Constant';
@@ -28,7 +27,10 @@ export const EditModal = () => {
     const { register, handleSubmit, formState: { errors }, setValue, reset } = useForm();
 
     const onSubmitHandler = (data) => {
-        if(!editingRequest)return createRequest(data)
+        if(!editingRequest)return createRequest({...data,
+            pointA: selectedPointA[0]?.name,
+            pointB: selectedPointB[0]?.name,
+            ship: selectedShip[0]?.name})
         if (data !== '') {
             console.log(selectedPointA[0]?.name,
             selectedPointB[0]?.name,
@@ -42,21 +44,22 @@ export const EditModal = () => {
         }
     };
 
-    // const handleSelectPointA = (selected) => {
-    //     setSelectedPointA(selected);
-    // };
-    //
-    // const handleSelectPointB = (selected) => {
-    //     setSelectedPointB(selected);
-    // };
+    const onChangeShip = (selected) => {
+        setSelectedShip(selected);
+        setValue('imo', selected[0]?.imo)
+    };
+
 
     useEffect(() => {
         getPoints().then(res => {
             pointsA = Object.keys(res.points_a).map(point => ({name: point}));
             pointsB = Object.keys(res.points_b).map(point => ({name: point}));
-            shipsOptions = ships.map(ship => ({name: ship.name}));
         });
     }, []);
+
+    useEffect(() => {
+        shipsOptions = ships.map(ship => ({name: ship.name, imo: ship.imo}));
+    }, [ships]);
 
     useEffect(() => {
         if (editingRequest) {
@@ -91,40 +94,16 @@ export const EditModal = () => {
                         onSubmit={handleSubmit(onSubmitHandler)} >
                         <div className="form-row">
                             <FormGroup className="col-md-12">
-                                <Label>{Imo}</Label>
-                                <input
-                                    className="form-control"
-                                    type="text"
-                                    autoComplete="off"
-                                    {...register('imo', { required: 'Поле обязательно для заполнения' })}
-                                />
-                                <span style={{ color: 'red' }}>
-                                    {errors.imo && 'imo is required'}
-                                </span>
-                            </FormGroup>
-                            <FormGroup className="col-md-12">
                                 <Label>{Ship}</Label>
                                 <Typeahead
                                     id="typeahead-point-a"
                                     labelKey="name"
                                     options={shipsOptions}
-                                    onChange={setSelectedShip}
+                                    onChange={onChangeShip}
                                     selected={selectedShip}
-                                    placeholder="Выберите точку A..."
+                                    placeholder="Выберите корабль"
                                 />
                             </FormGroup>
-                            {/*<FormGroup className="col-md-12">*/}
-                            {/*    <Label>{MaxSpeed}</Label>*/}
-                            {/*    <input*/}
-                            {/*        className="form-control"*/}
-                            {/*        type="text"*/}
-                            {/*        autoComplete="off"*/}
-                            {/*        {...register('maxSpeed', { required: 'Поле обязательно для заполнения' })}*/}
-                            {/*    />*/}
-                            {/*    <span style={{ color: 'red' }}>*/}
-                            {/*        {errors.maxSpeed && 'maxSpeed is required'}*/}
-                            {/*    </span>*/}
-                            {/*</FormGroup>*/}
                             <FormGroup className="col-md-12">
                                 <Label>{PointA}</Label>
                                 <Typeahead
@@ -171,18 +150,6 @@ export const EditModal = () => {
                                     {errors.endDate && 'endDate is required'}
                                 </span>
                             </FormGroup>
-                            {/*<FormGroup className="col-md-12">*/}
-                            {/*    <Label>{IceClass}</Label>*/}
-                            {/*    <input*/}
-                            {/*        className="form-control"*/}
-                            {/*        type="text"*/}
-                            {/*        autoComplete="off"*/}
-                            {/*        {...register('iceClass', { required: 'Поле обязательно для заполнения' })}*/}
-                            {/*    />*/}
-                            {/*    <span style={{ color: 'red' }}>*/}
-                            {/*        {errors.iceClass && 'iceClass is required'}*/}
-                            {/*    </span>*/}
-                            {/*</FormGroup>*/}
                         </div>
                         {editingRequest
                             ? <Btn attrBtn={{ color: 'primary', type: 'submit' }} >{Save}</Btn>

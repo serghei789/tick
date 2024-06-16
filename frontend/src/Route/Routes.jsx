@@ -31,6 +31,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/main`, Component: <MainPage /> },
   { path: `${process.env.PUBLIC_URL}/map`, Component: <MapPage /> },
 
+  { path: `${process.env.PUBLIC_URL}/schedule/gantt/:imo`, Component: <SchedulePage /> },
   { path: `${process.env.PUBLIC_URL}/schedule/gantt`, Component: <SchedulePage /> },
   { path: `${process.env.PUBLIC_URL}/schedule/table`, Component: <ScheduleTablePage /> },
 

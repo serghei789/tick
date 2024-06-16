@@ -2,22 +2,22 @@ import React, { Fragment } from 'react'
 import DataTable from 'react-data-table-component';
 import {getTableColumns} from "../../data";
 import {useContext} from "react";
-import {ModelsContext} from "../../../../../../../_helper/Models";
+import {SailingSectionsContext} from "../../../../../../../_helper/SailingSections";
 import {Reset} from "../../../../../../../Constant";
 
 const DataTableComponent = () => {
-    const { models, isOpenEditModal, setIsOpenEditModal, setEditingModel, deleteModel, reset } = useContext(ModelsContext);
+    const { sailingSections, isOpenEditModal, setIsOpenEditModal, setEditingSailingSection, deleteSailingSection, reset } = useContext(SailingSectionsContext);
 
-    const editToggle = (model) => {
-        if(model) {
-            setEditingModel(model)
+    const editToggle = (sailingSection) => {
+        if(sailingSection) {
+            setEditingSailingSection(sailingSection)
             setIsOpenEditModal(true)
         }
         setIsOpenEditModal(!isOpenEditModal);
     };
 
     const createHandler = () => {
-        setEditingModel(null)
+        setEditingSailingSection(null)
         setIsOpenEditModal(true)
     }
 
@@ -25,15 +25,15 @@ const DataTableComponent = () => {
         <Fragment>
             <div className='text-end'>
                 <div className='btn btn-primary' onClick={createHandler}>
-                    Создать модель
+                    Создать пункт сбора
                 </div>
                 <div className='btn btn-outline-primary ms-2' onClick={reset}>
                     {Reset}
                 </div>
             </div>
             <DataTable
-                data={models}
-                columns={getTableColumns(editToggle, deleteModel)}
+                data={sailingSections}
+                columns={getTableColumns(editToggle, deleteSailingSection)}
                 striped={true}
                 center={true}
                 pagination

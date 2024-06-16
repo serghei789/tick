@@ -1,7 +1,7 @@
 import React, {Fragment, useCallback, useContext, useEffect, useState} from "react";
 import {ConditionsContext} from "../../../../../../_helper/Conditions";
 import RangeComponent from "./RangeComponent/RangeComponent";
-import {Btn, H5, P} from "../../../../../../AbstractElements";
+import { P} from "../../../../../../AbstractElements";
 import { Reset, Save} from "../../../../../../Constant";
 import {Col, Row} from "reactstrap";
 
@@ -36,8 +36,13 @@ export const ConditionsPanel = () => {
     }, [conditions]);
     return (
         <Fragment>
-
-
+            <div className='text-end'>
+                <div className='btn btn-primary' onClick={() => onSave(values)}>
+                    {Save}
+                </div>
+                <div className='btn btn-outline-primary ms-2' onClick={onReset}>
+                    {Reset}
+                </div>
             {conditions.length && conditions.map(condition => <Fragment key={condition.id}> {
                     +condition.active
                         ? <Row>
@@ -57,10 +62,7 @@ export const ConditionsPanel = () => {
                 }
                 </Fragment>
             )}
-
-
-        <Btn attrBtn={{ color: 'primary', onClick: () => onSave(values) }} >{Save}</Btn>&nbsp;&nbsp;
-        <Btn attrBtn={{ color: 'primary', outline: true, onClick: onReset }} >{Reset}</Btn>
-        </Fragment>
+            </div>
+</Fragment>
     );
 };

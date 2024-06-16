@@ -11,4 +11,9 @@ export const ModelsApi = `${rootPath}/backend/index.php?mod=tables&tab=models`;
 export const PostModelsApi = `${rootPath}/backend/index.php?mod=edit-tables&tab=models`;
 export const ConditionsApi = `${rootPath}/backend/index.php?mod=tables&tab=constant`;
 export const PostConditionsApi = `${rootPath}/backend/index.php?mod=edit-tables&tab=constant`;
+export const SailingSectionsApi = `${rootPath}/backend/index.php?mod=tables&tab=sailing_section`;
+export const PostSailingSectionsApi = `${rootPath}/backend/index.php?mod=edit-tables&tab=sailing_section`;
+export const PlacementInitApi = `${rootPath}/backend/index.php?mod=tables&tab=placement_init`;
+export const PostPlacementInitApi = `${rootPath}/backend/index.php?mod=edit-tables&tab=placement_init`;
+
 export const ResetTableApi = `${rootPath}/backend/index.php?mod=backup`;

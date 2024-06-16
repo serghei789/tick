@@ -1,9 +1,9 @@
 import axios from "axios";
-import {ModelsApi, PostModelsApi, ResetTableApi} from "../index";
+import {SailingSectionsApi, PostSailingSectionsApi, ResetTableApi} from "../index";
 
-export const getModels = async () => {
+export const getSailingSections = async () => {
     try {
-        return await axios.get(ModelsApi).then(resp => {
+        return await axios.get(SailingSectionsApi).then(resp => {
             return resp.data
         })
     } catch (error) {
@@ -11,13 +11,13 @@ export const getModels = async () => {
     }
 };
 
-export const createModel = async (createData) => {
+export const createSailingSection = async (createData) => {
     const requestData = {
         method: 'create',
         data: createData
     }
 
-    const getURI = `${PostModelsApi}&json=` + encodeURI(JSON.stringify(requestData))
+    const getURI = `${PostSailingSectionsApi}&json=` + encodeURI(JSON.stringify(requestData))
     try {
         return await axios.get(`${getURI}`);
     } catch (error) {
@@ -25,13 +25,13 @@ export const createModel = async (createData) => {
     }
 };
 
-export const updateModel = async (updatedData) => {
+export const updateSailingSection = async (updatedData) => {
     const requestData = {
         method: 'update',
         data: updatedData
     }
 
-    const getURI = `${PostModelsApi}&json=` + encodeURI(JSON.stringify(requestData))
+    const getURI = `${PostSailingSectionsApi}&json=` + encodeURI(JSON.stringify(requestData))
     try {
         return await axios.get(`${getURI}`);
     } catch (error) {
@@ -39,14 +39,14 @@ export const updateModel = async (updatedData) => {
     }
 };
 
-export const deleteModel = async (id) => {
+export const deleteSailingSection = async (id) => {
     const requestData = {
         method: 'delete',
         data: {
             id
         }
     }
-    const getURI = `${PostModelsApi}&json=` + encodeURI(JSON.stringify(requestData))
+    const getURI = `${PostSailingSectionsApi}&json=` + encodeURI(JSON.stringify(requestData))
 
     try {
         return await axios.get(getURI)
@@ -55,8 +55,8 @@ export const deleteModel = async (id) => {
     }
 };
 
-export const resetModels = async () => {
-    const URI = `${ResetTableApi}&tab=models`
+export const resetSailingSections = async () => {
+    const URI = `${ResetTableApi}&tab=sailing_section`
     try {
         return await axios.get(`${URI}`);
     } catch (error) {
