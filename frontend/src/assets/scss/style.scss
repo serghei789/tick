@@ -1,0 +1,399 @@
+// *** utils ***
+
+@import 'utils/variables';
+
+:root {
+  --theme-deafult: #2c63f1;
+  --theme-secondary: #f73164;
+  --light-background: rgba(242, 243, 247, 0.7);
+  --body-font-color: #2f2f3b;
+  --chart-border: #ecf3fa;
+  --recent-chart-bg: #fcfcfd;
+  --light-bg: #f6f7f9;
+  --white: #fff;
+  --light2: #f5f6f9;
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --chart-text-color: rgba(82, 82, 108, 0.8);
+  --recent-dashed-border: rgba(82, 82, 108, 0.3);
+  --chart-dashed-border: rgba(82, 82, 108, 0.2);
+  --chart-progress-light: rgba(82, 82, 108, 0.1);
+  --recent-box-bg: #f2f4f7;
+  --recent-border: rgba(97, 101, 122, 0.25);
+  --course-light-btn: #f2f3f7;
+  --course-bg: #f7f7f7;
+  --balance-profie-bg: #e0dfef;
+  --view-grid-bg: #ecf3fa80;
+  --view-border-marker: #cfcdfc;
+
+  --fc-button-bg-color: var(--theme-deafult);
+  --fc-button-active-bg-color: var(--theme-deafult);
+  --fc-button-active-border-color: var(--theme-deafult);
+  --fc-button-border-color: var(--theme-deafult);
+  --fc-button-hover-bg-color: var(--theme-deafult);
+  --fc-button-hover-border-color: var(--theme-deafult);
+}
+
+body[class='dark-only'],
+body.dark-only {
+  --light-background: rgba(31, 32, 40, 0.65);
+  --recent-chart-bg: #262932;
+  --light-bg: #1d1e26;
+  --white: #262932;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --light2: #1d1e26;
+  --chart-border: #374558;
+  --recent-box-bg: #1d1e26;
+  --recent-border: #374558;
+  --body-font-color: rgba(255, 255, 255, 0.6);
+  --course-light-btn: var(--light-bg);
+  --view-grid-bg: var(--light-bg);
+  --view-border-marker: #2c2c45d4;
+  -semi-dark: #1d1e26;
+}
+
+// *** base ***
+@import 'base/reset';
+@import 'base/typography';
+
+//  *** components ***
+@import 'components/according';
+@import 'components/alert';
+@import 'components/avatars';
+@import 'components/badge';
+@import 'components/bookmark';
+@import 'components/breadcrumb';
+@import 'components/builders';
+
+@import 'components/buttons';
+
+@import 'components/card';
+@import 'components/color';
+@import 'components/datepicker';
+@import 'components/dropdown';
+@import 'components/datatable';
+// @import "components/form-builder";
+@import 'components/form-input';
+@import 'components/form-wizard';
+@import 'components/forms';
+// @import "components/form_builder-2";
+@import 'components/icons';
+@import 'components/list';
+@import 'components/loader';
+@import 'components/popover';
+@import 'components/print';
+@import 'components/radio';
+@import 'components/ribbon';
+@import 'components/switch';
+@import 'components/tab';
+@import 'components/table';
+@import 'components/timePeeker';
+@import 'components/touchspin';
+@import 'components/tour';
+@import 'components/typeahead-search';
+@import 'components/react-plugin';
+@import 'components/slick.scss';
+@import 'components/slick-theme.scss';
+@import 'components/scrollbar';
+
+//	*** pages ***
+
+@import 'pages/blog.scss';
+@import 'pages/bookmark-app.scss';
+@import 'pages/cart.scss';
+@import 'pages/chart.scss';
+@import 'pages/chat.scss';
+@import 'pages/checkout.scss';
+@import 'pages/comingsoon.scss';
+@import 'pages/contacts.scss';
+@import 'pages/dashboard_2.scss';
+@import 'pages/dashboard_3.scss';
+@import 'pages/dashboard_4.scss';
+@import 'pages/dashboard_5.scss';
+@import 'pages/dashboard_default.scss';
+@import 'pages/ecommerce.scss';
+@import 'pages/email-application.scss';
+@import 'pages/errorpage.scss';
+@import 'pages/faq.scss';
+@import 'pages/file.scss';
+@import 'pages/gallery.scss';
+@import 'pages/internationalization.scss';
+@import 'pages/job-search.scss';
+@import 'pages/jsgrid.scss';
+@import 'pages/kanban.scss';
+@import 'pages/knowledgebase.scss';
+@import 'pages/language.scss';
+@import 'pages/learning.scss';
+@import 'pages/login.scss';
+@import 'pages/megaoption.scss';
+@import 'pages/order-history.scss';
+@import 'pages/page.scss';
+@import 'pages/pricing.scss';
+@import 'pages/progress.scss';
+@import 'pages/projectlist.scss';
+@import 'pages/social-app.scss';
+@import 'pages/task.scss';
+@import 'pages/timeline-v.scss';
+@import 'pages/timeliny.scss';
+@import 'pages/user-profile.scss';
+@import 'pages/wishlist.scss';
+
+// *** layout ***
+@import 'layout/footer.scss';
+@import 'layout/grid.scss';
+@import 'layout/header.scss';
+@import 'layout/navs.scss';
+@import 'layout/search.scss';
+@import 'layout/select2.scss';
+@import 'layout/sidebar.scss';
+@import 'layout/rtl.scss';
+@import 'layout/box-layout';
+
+/* ---------------------
+	*** themes **
+-----------------------*/
+@import 'themes/dark';
+@import 'themes/theme-customizer';
+@import 'themes/responsive';
+@import 'themes/update';
+
+// Fonts & Typography
+@import url('https://fonts.googleapis.com/css?family=Exo:300');
+$loader-font: 'Exo', sans-serif;
+$letterDim: 40px;
+$letterSize: 2em;
+$letterEasing: ease-in;
+$letterSpeed: 4s;
+
+// Colors
+$white: #fff;
+$black: #000;
+$palette: #2B6ED1, #000080, #00001a, #54b7ec;
+
+// Loader Settings
+$dim: 20rem;
+$fadeStart: .1;
+$fadeEnd: 1;
+$speed: 4s;
+$easing: ease-out;
+$type: normal;  //normal / reverse / alternate / alternate-reverse
+
+
+// Generals
+*,*::before,*::after{
+  box-sizing: border-box;
+}
+
+// Loader styles
+.wrap-loader{
+  font-size: 16px;
+  font-family: $loader-font;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background: $black;
+}
+.loader{
+  position: relative;
+  width: $dim;
+  height: $dim;
+  &::before{
+    z-index: 1;
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: $dim / 2.3;
+    height: $dim / 2.3;
+    background: $black;
+    border-radius: 50%;
+  }
+
+  .box{
+    position: absolute;
+    width: $dim / 2;
+    height: $dim / 2;
+    overflow: hidden;
+    &::before{
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      opacity: $fadeStart;
+    }
+    &:nth-child(1){
+      top: 0;
+      left: 0;
+      &::before{
+        top: 50%;
+        left: 50%;
+        background: nth($palette, 1);
+        animation: lightMe1 $speed $easing infinite $type;
+      }
+    }
+    &:nth-child(2){
+      top: 0;
+      right: 0;
+      &::before{
+        top: 50%;
+        right: 50%;
+        background: nth($palette, 2);
+        animation: lightMe2 $speed $easing infinite $type;
+      }
+    }
+    &:nth-child(3){
+      bottom: 0;
+      right: 0;
+      &::before{
+        bottom: 50%;
+        right: 50%;
+        background: nth($palette, 3);
+        animation: lightMe3 $speed $easing infinite $type;
+      }
+    }
+    &:nth-child(4){
+      bottom: 0;
+      left: 0;
+      &::before{
+        bottom: 50%;
+        left: 50%;
+        background: nth($palette, 4);
+        animation: lightMe4 $speed linear infinite $type;
+      }
+    }
+  }
+
+  .wrap-text{
+    z-index: 2;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: $letterDim;
+    height: $letterDim;
+    overflow: hidden;
+  }
+  .text{
+    position: relative;
+    width: $letterDim;
+    height: $letterDim;
+    line-height: $letterDim;
+    animation: slider $letterSpeed $letterEasing infinite;
+    span{
+      display: block;
+      width: $letterDim;
+      height: $letterDim;
+      line-height: $letterDim;
+      text-align: center;
+      font-size: $letterSize;
+      color: $white;
+    }
+  }
+}
+
+.loader-text{
+  color: $white;
+  transform: translateY(-2rem);
+  letter-spacing: 6px;
+  opacity: .2;
+  animation: blink $speed/4 $easing infinite alternate;
+}
+
+
+// Animations
+@keyframes lightMe1{
+  0%{
+    opacity: $fadeStart;
+  }
+  25%{
+    opacity: $fadeEnd;
+  }
+  100%{
+    opacity: $fadeEnd;
+  }
+}
+@keyframes lightMe2{
+  0%{
+    opacity: $fadeStart;
+  }
+  25%{
+    opacity: $fadeStart;
+  }
+  50%{
+    opacity: $fadeEnd;
+  }
+  100%{
+    opacity: $fadeEnd;
+  }
+}
+@keyframes lightMe3{
+  0%{
+    opacity: $fadeStart;
+  }
+  50%{
+    opacity: $fadeStart;
+  }
+  75%{
+    opacity: $fadeEnd;
+  }
+  100%{
+    opacity: $fadeEnd;
+  }
+}
+@keyframes lightMe4{
+  0%{
+    opacity: $fadeStart;
+  }
+  75%{
+    opacity: $fadeStart;
+  }
+  100%{
+    opacity: $fadeEnd;
+  }
+}
+
+@keyframes slider{
+  0%{
+    transform: translateY(0);
+  }
+  20%{
+    transform: translateY(0);
+  }
+  25%{
+    transform: translateY(-$letterDim);
+  }
+  40%{
+    transform: translateY(-$letterDim);
+  }
+  45%{
+    transform: translateY(-$letterDim * 2);
+  }
+  60%{
+    transform: translateY(-$letterDim * 2);
+  }
+  65%{
+    transform: translateY(-$letterDim * 3);
+  }
+  80%{
+    transform: translateY(-$letterDim * 3);
+  }
+  85%{
+    transform: translateY(-$letterDim * 4);
+  }
+  100%{
+    transform: translateY(-$letterDim * 4);
+  }
+}
+
+@keyframes blink{
+  from{
+    opacity: .2;
+  }
+  to{
+    opacity: .75;
+  }
+}

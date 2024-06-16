@@ -1,0 +1,12 @@
+.accordion-item .accordion-header .accordion-button:not(.collapsed) {
+    background-color: transparent;
+    outline: 0;
+}
+.accordion {
+    border-radius: 10px;
+    background-color: transparent;
+}
+
+.accordion-header {
+    border-radius: 10px;
+}
