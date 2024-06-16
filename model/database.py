@@ -37,8 +37,9 @@ class SqlClass:
                WHERE caravan_id='{caravan_id}' and raiting=1 
                LIMIT 1     
                '''
-        # column_names = self.get_table_column_names('trace_raiting')
+        # print(query)
         data = self.connection.execute(query).fetchall()
+        # print(data)
         if data:
             return data[0]
         else:
@@ -257,7 +258,7 @@ class SqlClass:
     def update_edge_distance(self, id, distance):
         query = f'''UPDATE `edge` SET distance={distance} where edge={id}
                  '''
-        print(query)
+        # print(query)
         self.connection.execute(query)
         return None
 
@@ -409,13 +410,13 @@ class SqlClass:
         column_names = self.get_table_column_names('square_ice')
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=column_names)
-        print(len(data))
+        # print(len(data))
         return data
 
     def get_square_ice_status(self, start_date):
         query = f'''SELECT * FROM `square_ice` WHERE start_date='{start_date}' and status=1
                    '''
-        print(query)
+        # print(query)
         column_names = self.get_table_column_names('square_ice')
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=column_names)
@@ -631,13 +632,13 @@ class SqlClass:
         self.connection.execute(query)
         return None
 
-    def get_placement(self, model_id, point_a, point_b, datetime_start):
+    def get_placement_icebreaker(self, model_id, point_a, point_b, datetime_start):
         #Определим примерное время в пути
         query = f'''select time from routes_names where point_a ='{point_a}' and point_b = '{point_b}' limit 1
           '''
         data = self.connection.execute(query).fetchall()
         datetime_end = datetime_start + datetime.timedelta(seconds=data[0][0])
-
+        #Ищем ледокол в точке
         query = f'''
              SELECT *
              FROM placement
@@ -649,22 +650,35 @@ class SqlClass:
              AND icebreaker='1'
              LIMIT 1
              '''
+        #             AND teleport = ''
         data = self.connection.execute(query).fetchall()
 
         if len(data)==0:
-            #Выбирать ближайший ледокол
-            query = f'''
-                        SELECT *
-                        FROM placement
-                        WHERE (point_name='*')
-                        AND datetime_start<='{datetime_start}'
-                        AND datetime_end>='{datetime_end}'
-                        AND free=1
-                        AND model_id={model_id}
-                        AND icebreaker='1'
-                        LIMIT 1
-                        '''
-            data = self.connection.execute(query).fetchall()
+            # caravan['point_a']
+            query = f'''SELECT * from points  WHERE name='{point_a}' limit 1 '''
+            # print(query)
+            points = self.connection.execute(query).fetchall()
+            column_names = self.get_table_column_names('points')
+            points = pd.DataFrame(points, columns=column_names)
+            # print(query)
+            for index, point in points.iterrows():
+                #Выбирать ближайший ледокол
+                query = f'''
+                            SELECT pl.*
+                            FROM placement as pl
+                            LEFT join points as p on name=pl.teleport
+                            WHERE point_name='*'
+                            AND teleport != ''
+                            AND datetime_start<='{datetime_start}'
+                            AND datetime_end>='{datetime_end}'
+                            AND free=1
+                            AND model_id={model_id}
+                            AND icebreaker='1'
+                            ORDER BY (abs({point['lat']}-p.lat)+abs({point['lng']}-p.lng)) asc
+                            LIMIT 1
+                            '''
+                # print(query)
+                data = self.connection.execute(query).fetchall()
 
         column_names = self.get_table_column_names('placement')
         data = pd.DataFrame(data, columns=column_names)
@@ -727,7 +741,7 @@ order by goal_func desc
 
     def teleport_update_placement(self, model_id):
 
-        query = f'''UPDATE `placement` SET point_name='*', datetime_start=DATE_ADD(datetime_start, INTERVAL 1 DAY), iceclass = 'teleport'  
+        query = f'''UPDATE `placement` SET teleport =point_name , point_name='*', datetime_start=DATE_ADD(datetime_start, INTERVAL 1 DAY) 
                     WHERE free=1 
                     and icebreaker=1 
                     and model_id={model_id} 
@@ -754,8 +768,8 @@ order by goal_func desc
             self.connection.execute(query)
 
             # Новая строка с караваном
-            query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, iceclass, icebreaker) VALUES 
-                            ('{model_id}','{imo}','{caravan['datetime_start']}','{caravan['datetime_end']}','{caravan['point_b']}','0', '{iceclass}','{icebreaker}')
+            query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, teleport, icebreaker) VALUES 
+                            ('{model_id}','{imo}','{caravan['datetime_start']}','{caravan['datetime_end']}','{caravan['point_b']}','0', '','{icebreaker}')
                             '''
             self.connection.execute(query)
 
@@ -763,17 +777,17 @@ order by goal_func desc
             if imo_placement['datetime_start'] < caravan['datetime_start']:
                 new_end = caravan['datetime_start'] - timedelta(seconds=1)
                 # print(new_end)
-                query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, iceclass, icebreaker) VALUES 
+                query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, teleport, icebreaker) VALUES 
                                ('{imo_placement['model_id']}','{imo}','{imo_placement['datetime_start']}',
-                                '{new_end}','{caravan['point_a']}','{imo_placement['free']}', '{imo_placement['iceclass']}','{icebreaker}')
+                                '{new_end}','{caravan['point_a']}','{imo_placement['free']}', '','{icebreaker}')
                                '''
                 self.connection.execute(query)
             # Интервал справа POINT_NAME = POINT_A
             if imo_placement['datetime_end'] > caravan['datetime_end']:
                 new_start = caravan['datetime_end'] + timedelta(seconds=1)
-                query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, iceclass, icebreaker) VALUES 
+                query = f'''INSERT INTO `placement`(model_id, `imo`, `datetime_start`, `datetime_end`, `point_name`, `free`, teleport, icebreaker) VALUES 
                                            ('{imo_placement['model_id']}','{imo}','{new_start}',
-                                            '{imo_placement['datetime_end']}','{caravan['point_b']}','{imo_placement['free']}', '{imo_placement['iceclass']}','{icebreaker}')
+                                            '{imo_placement['datetime_end']}','{caravan['point_b']}','{imo_placement['free']}', '','{icebreaker}')
                                            '''
                 self.connection.execute(query)
         return None
@@ -832,8 +846,8 @@ order by goal_func desc
                    select lat, lng from trace_intervals where route_id={route_id} and version={version}
                    ;'''
         data = self.connection.execute(query).fetchall()
-        for d in data:
-            print(f'[{d[0]}, {d[1]}],')
+        # for d in data:
+        #     print(f'[{d[0]}, {d[1]}],')
         return None
 
     def insert_raiting(self, caravan_id, route_id):
@@ -1113,10 +1127,10 @@ order by goal_func desc
 
     def set_wish_list_model_distinct(self):
         sql.truncate_table('wish_list_model_distinct')
-        query = f'''insert into wish_list_model_distinct 
-                    select model_id, id, imo, point_a, point_b, datetime_start, sailing, max(goal_func) FROM wish_list_model group by model_id, id, imo, point_a, point_b, datetime_start, sailing
-              '''
-        self.connection.execute(query)
+        # query = f'''insert into wish_list_model_distinct
+        #             select model_id, id, imo, point_a, point_b, datetime_start, sailing, max(goal_func) FROM wish_list_model group by model_id, id, imo, point_a, point_b, datetime_start, sailing
+        #       '''
+        # self.connection.execute(query)
         return None
 
     # update wish_list set caravan_id =0;
@@ -1152,9 +1166,9 @@ join placement as p_s on p_s.model_id = wl.model_id
                      and wl.datetime_end   between p_s.datetime_start and p_s.datetime_end
     where wl.model_id={model_id} 
       and wp.caravan_id = 0 
-      and (wl.sailing = 'P' or wl.sailing = 'D' or wl.sailing = 'S')  
 group by point_a, point_b, datetime_start  ORDER by sum_goal_func desc, datetime_start asc  
 limit 1'''
+        #and (wl.sailing = 'P' or wl.sailing = 'D' or wl.sailing = 'S')
         # print(query)
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=('model_id', 'point_a', 'point_b', 'datetime_start', 'sum_goal_func'))
@@ -1186,55 +1200,6 @@ LIMIT {max_ships_caravan}
         # print(query)
         data = self.connection.execute(query).fetchall()
 
-
-#
-#         # print('-------------------')
-#         query = f'''SELECT distinct wl.id, wl.datetime_start,  wl.datetime_end, wl.point_a, wl.point_b, wl.imo, gg.part_id  from
-# (SELECT  wd.model_id, wd.point_a, wd.point_b, wd.datetime_start, wp.part_id, sum(wd.goal_func) as sum_goal_func FROM wish_list_model_distinct as wd
-# join wish_list_parts as wp on wp.id=wd.id and wp.point_a=wd.point_a and wp.point_b=wd.point_b and wp.model_id=wd.model_id and wp.model_id = {model_id}
-# join placement as p_i on p_i.model_id = wd.model_id
-#                      and p_i.model_id  = {model_id}
-#                      and p_i.free = 1
-#                      and p_i.icebreaker = 1
-#                      and (p_i.point_name = wd.point_a or p_i.point_name = '*' )
-#                      and wd.datetime_start between p_i.datetime_start and p_i.datetime_end
-# join placement as p_s on p_s.model_id = wd.model_id
-#                      and p_s.model_id ={model_id}
-#                      and p_s.free = 1
-#                      and p_s.imo = wd.imo
-#                      and (p_s.point_name = wd.point_a or p_s.point_name = '*' or p_s.point_name = wd.point_b)
-#                      and wd.datetime_start between p_s.datetime_start and p_s.datetime_end
-#     where wd.model_id={model_id}
-#       and wp.caravan_id = 0
-#       and (wd.sailing = 'P' or wd.sailing = 'D')
-# group by point_a, point_b, datetime_start,  wp.part_id   ORDER by sum_goal_func desc, datetime_start asc
-# limit 1
-# ) as gg
-#  left join wish_list_model as wl ON wl.model_id = gg.model_id
-#                                 and wl.model_id ={model_id}
-#                                 and wl.point_a = gg.point_a
-#                                 and wl.point_b = gg.point_b
-#                                 and wl.datetime_start = gg.datetime_start
-#                                 and (wl.sailing = 'P' or wl.sailing = 'D')
-# join placement as p_s on p_s.model_id = wl.model_id
-#                      and p_s.model_id  ={model_id}
-#                      and p_s.free = 1
-#                      and p_s.imo = wl.imo
-#                      and (p_s.point_name = wl.point_a or p_s.point_name = '*' or p_s.point_name = wl.point_b )
-#                      and wl.datetime_start between p_s.datetime_start and p_s.datetime_end
-#
-# join placement as p_i on p_i.model_id = wl.model_id
-#                      and p_i.model_id  = {model_id}
-#                      and p_i.free = 1
-#                      and p_i.icebreaker = 1
-#                      and (p_i.point_name = wl.point_a or p_i.point_name = '*' )
-#                      and wl.datetime_start between p_i.datetime_start and p_i.datetime_end
-#                      and wl.datetime_end   between p_i.datetime_start and p_i.datetime_end
-# LIMIT {max_ships_caravan}
-#                   '''
-#         print(query)
-#         # print('-------------------')
-#         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=('id', 'datetime_start', 'datetime_end', 'point_a', 'point_b', 'imo', 'part_id', 'necessity'))
         return data
 

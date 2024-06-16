@@ -174,9 +174,9 @@ def create_time_intervals():
     print('create_time_intervals')
     sql.truncate_table('time_intervals')
     #Сгенерируем временные интервалы с длиной шага step_time
-    step_time_s = sql.get_constant('step_time')
+    step_time_s = sql.get_constant('step_time') * 2
     intervals = sql.get_interval()
-    print(intervals)
+    # print(intervals)
     for index, interval in intervals.iterrows():
         if interval['start']!=None:
             step_time = interval['start']

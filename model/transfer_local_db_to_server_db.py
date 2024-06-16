@@ -60,8 +60,10 @@ def transfer_db(_from='local',_to='server', include_tables=()):
           insert_list = []
           index=0
           for index, row in enumerate(src_table.select().execute()):
+             index = 1
              insert_list.append(row._asdict())
-          stmt.execute(insert_list)
+          if index==1:
+            stmt.execute(insert_list)
           # print(f"table ={table.name} Inserting row {index}")
 
    print("--- Время выполнения скрипта %s seconds ---" % (time.time() - start_time))

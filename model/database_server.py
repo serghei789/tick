@@ -36,7 +36,7 @@ class SqlClassServer:
 
     def set_events_status(self, event, progress):
         print(time.time())
-        print(event['timestamp_start'])
+        # print(event['timestamp_start'])
         run_time = datetime.now() - datetime.strptime(str(event['timestamp_start']), '%Y-%m-%d %H:%M:%S')
         print(run_time)
         query = f'''UPDATE `events` SET status=1, progress={progress}, 	run_time='{run_time}' WHERE id='{event['id']}' '''

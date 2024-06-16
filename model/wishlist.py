@@ -109,6 +109,7 @@ def wish_list_model(list_id=[], event_id=0):
 #Итерируемся по частям маршрута с заданным временем отплытия
 def start_parts_route(datetime_start, wish_list_parts, caravan_id, end, wish_list, models, wish_list_model):
     wish_list_model_part = []
+    # pprint(wish_list_parts)
     for index_parts, wish in wish_list_parts.iterrows():
 
         if wish['part_id'] == 1:
@@ -121,6 +122,7 @@ def start_parts_route(datetime_start, wish_list_parts, caravan_id, end, wish_lis
         caravan_id += 1
         # Сформируем маршрут
         iceclass = sql.get_iceclass(wish['imo'])
+        pprint(wish)
         create_routes_for_ship(point_a=wish['point_a'], point_b=wish['point_b'], datetime_start=datetime_start_part, caravan_id=caravan_id, sailing=wish['sailing'], imo=wish['imo'], iceclass=iceclass)
         [c_datetime_end, time] = sql.get_trace_raiting(caravan_id)
         if time > 0:
@@ -146,7 +148,7 @@ def start_parts_route(datetime_start, wish_list_parts, caravan_id, end, wish_lis
         else:
             pass
             break
-    return  [wish_list_model, caravan_id, c_datetime_end]
+    return [wish_list_model, caravan_id, c_datetime_end]
 
 def hour_rounder(t):
     rounder_minute = sql.get_constant('rounder_minute')
@@ -159,12 +161,12 @@ def hour_rounder(t):
         h = datetime.combine(t.date(),mytime)
         # print(h)
     return h
-def teleport_icebreaker(model_id,imo):
-    caravan = {'datetime_start': datetime.strptime('2022-03-02 00:00:00', "%Y-%m-%d %H:%M:%S"),
-                                   'datetime_end': datetime.strptime('2022-03-02 00:00:01', "%Y-%m-%d %H:%M:%S"),
-                                   'point_a': '*',
-                                   'point_b': '*'}
-    sql.set_new_placement(model_id=model_id, imo=imo, caravan=caravan, iceclass='Arc9(Taimyr)', icebreaker=1)
+# def teleport_icebreaker(model_id,imo):
+#     caravan = {'datetime_start': datetime.strptime('2022-03-02 00:00:00', "%Y-%m-%d %H:%M:%S"),
+#                                    'datetime_end': datetime.strptime('2022-03-02 00:00:01', "%Y-%m-%d %H:%M:%S"),
+#                                    'point_a': '*',
+#                                    'point_b': '*'}
+#     sql.set_new_placement(model_id=model_id, imo=imo, caravan=caravan, iceclass='Arc9(Taimyr)', icebreaker=1)
 def teleport_icebreaker_all(model_id):
     sql.teleport_update_placement(model_id)
     return None
@@ -194,7 +196,6 @@ def group_caravan(event_id=0):
             sqlServer.set_events_progress(event_id, progress=progress, text=f"Формируем караван #{caravan_id}, модель {model['model_id']}")
             if stop:
                 stop_count+=1
-
                 if stop_count < stop_max:
                     # Передвинем ледокол на новое место
                     print(f'Телепортация ледокола #{stop_count}')
@@ -263,7 +264,7 @@ def create_caravan(model_id, caravan_id, sailing):
                 # Выбор ледокола для каравана выполняем 1 раз и запоминием
                 if imo_icebreaker==0:
                     # Проверим наличие ледокола
-                    data = sql.get_placement(model_id, caravan['point_a'], caravan['point_b'], caravan['datetime_start'])
+                    data = sql.get_placement_icebreaker(model_id, caravan['point_a'], caravan['point_b'], caravan['datetime_start'])
                     if len(data) > 0:
                         for index, d in data.iterrows():
                             # Берем первый попавшийся свободный ледокол
