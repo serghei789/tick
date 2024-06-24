@@ -1,6 +1,10 @@
 import time
+import urllib
 from datetime import datetime
 from functools import lru_cache
+from urllib.parse import urlencode
+
+import requests
 import sqlalchemy
 import pandas as pd
 import warnings
@@ -64,9 +68,13 @@ class SqlClassServer:
 
     def set_events_progress(self, event_id, progress, text=''):
         if event_id!=0:
+            progress = round(progress, 2)
             query = f'''UPDATE `events` SET progress={progress}, text='{text}' WHERE id='{event_id}'
-                                '''
-            # print(query)
+            '''
+            data = self.connection.execute(query)
+            print(text)
+
+            query = f'''INSERT INTO logs(event_id, text, progress, time) VALUES ({event_id}, '{text}', {progress}, '{datetime.now()}') '''
             data = self.connection.execute(query)
         return None
 

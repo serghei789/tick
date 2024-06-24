@@ -12,28 +12,30 @@ export const InitPlacementsProvider = (props) => {
     };
 
     const create = (createData) => {
-        createInitPlacement(createData)
-            .then(() => {
+        // createInitPlacement(createData)
+        //     .then(() => {
+        //         setIsOpenEditModal(false)
+        //         return getInitPlacements()
+        //     })
+        //     .then(resp => {
+        //         setInitPlacements(resp);
+        //     });
                 setIsOpenEditModal(false)
-                return getInitPlacements()
-            })
-            .then(resp => {
-                setInitPlacements(resp);
-            });
     };
 
     const update = (updatedData) => {
-        updateInitPlacement(updatedData).then(() => {
-            setInitPlacements(initPlacements.map((item) => (item.id === updatedData.id ? updatedData : item)));
+        // updateInitPlacement(updatedData).then(() => {
+        //     setInitPlacements(initPlacements.map((item) => (item.id === updatedData.id ? updatedData : item)));
+        //     setIsOpenEditModal(false)
+        // });
             setIsOpenEditModal(false)
-        });
     };
 
     const remove = (id) => {
         if (window.confirm(`Вы уверены, что хотите удалить эту запись?`)) {
-            deleteInitPlacement(id).then(() => {
-                setInitPlacements(initPlacements.filter((data) => data.id !== id));
-            })
+            // deleteInitPlacement(id).then(() => {
+            //     setInitPlacements(initPlacements.filter((data) => data.id !== id));
+            // })
         }
     };
 

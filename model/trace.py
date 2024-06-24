@@ -24,12 +24,15 @@ def check_sailing(sailing, sailing_valid):
             return False
     return True
 
-def check_sailing_trace(route_step, sailing, imo, edge):
-    # Проверим, что корабль может идти по этому ребру
-    cohesion = sql.get_cohesion(route_step['datetime'].date(), edge)
-    sailing_valid = sql.get_sailing(imo=imo, cohesion=cohesion)
-    # print(f'sailing={sailing}, sailing_valid={sailing_valid}')
-    return check_sailing(sailing, sailing_valid)
+def check_sailing_trace(route_step, sailing, imo, edge, forest_run):
+    if forest_run==1:
+        # print(f'run_for_ice()')
+        return True
+    else:
+        # Проверим, что корабль может идти по этому ребру
+        cohesion = sql.get_cohesion(route_step['datetime'].date(), edge)
+        sailing_valid = sql.get_sailing(imo=imo, cohesion=cohesion)
+        return check_sailing(sailing, sailing_valid)
 def get_trace(route_step, next_step, sailing, imo, iceclass):
     global step_time_s
 

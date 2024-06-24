@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="<?=DOMAIN;?>/backend/lib/js/jquery/jquery-ui/jquery-ui.css">
     <link rel="stylesheet" href="<?=DOMAIN;?>/backend/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="<?=DOMAIN;?>/backend/lib/js/bootstrap-select/bootstrap-select.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.min.css" integrity="sha256-Qsx5lrStHZyR9REqhUF8iQt73X06c8LGIUPzpOhwRrI=" crossorigin="anonymous">
     <link rel="stylesheet" href="<?=DOMAIN;?>/backend/lib/js/datepicker/datepicker3.css" />
     <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=0bf693a3-841a-4f92-b3cf-0ef545c8b18b"></script>
     
@@ -193,7 +194,22 @@
     font-size: 1.03rem !important;
     font-weight: 500 !important;
     color: #333738 !important;
+}
 
+.startPlayBtn {
+    font-size: 22px;
+    margin-top: -28px;
+    margin-left: 15px;
+}
+
+.listLogs {
+    width: 100%;
+    height: 250px;
+    padding: 3px 7px;
+    overflow-y: auto;
+    background-color: #000;
+    color: lightgray;
+    font-size: 14px;
 }
 
 </style>
@@ -229,10 +245,10 @@
     
     <div class="row">
       <div class="col-md-6">
-        <select class="selectpicker form-control mb-1" name="numberBidsEdit[]" multiple title="Номер заявки" aria-label="" data-live-search="true">
+        <select class="selectpicker form-control mb-2" name="numberBidsEdit[]" multiple title="Номер заявки" aria-label="" data-live-search="true">
          <?if($bidsList!=false):?>
          <?foreach($bidsList as $val):?>
-         <option value="<?=$val['id'];?>"><?=$val['id'];?></option>
+         <option value="<?=$val['id'];?>">№<?=$val['id'];?> - <?=$val['point_a'];?> - <?=$val['point_b'];?> (<?=$val['name'];?>)</option>
          <?endforeach;?>
          <?endif;?>
          </select>
@@ -243,7 +259,7 @@
         <input type="hidden" name="component" value="" />
         <input type="hidden" name="ajaxLoad" value="jsEditRoutesStatus" />
         <input type="hidden" name="alert" value="" />
-        <button class="send_form btn btn-primary w-100" id="jsEditRoutes">Пересчитать</button>
+        <button class="send_form btn btn-primary w-100 mb-2" id="jsEditRoutes">Пересчитать</button>
       </div>
     </div>
    </form>
@@ -253,7 +269,7 @@
     <form method="post" action="" id="form_jsStopEditRoutes">
      <input type="hidden" name="module" value="<?=$moduleName;?>" />
      <input type="hidden" name="component" value="" />
-     <button class="send_form btn btn-secondary w-100" id="jsStopEditRoutes">Стоп</button>
+     <button class="send_form btn btn-secondary w-100 mb-2" id="jsStopEditRoutes">Стоп</button>
    </form>
   </div>
   <div class="col-md-3">
@@ -262,12 +278,20 @@
      <input type="hidden" name="component" value="" />
      <input type="hidden" name="selfRedirect" value="1" />
      <input type="hidden" name="alert" value="" />
-     <button class="send_form btn btn-primary w-100" id="jsGetDefault">Восстановить данные</button>
+     <button class="send_form btn btn-primary w-100 mb-2" id="jsGetDefault">Восстановить данные</button>
    </form>
   </div>
                 
                 </div>
                 
+                
+  <div id="jsAjaxLoadLogs" class="listLogs">
+   <?if ($logs!=false):?>
+    <?foreach($logs as $log):?>
+     <div><?=$log['time'];?> <?=$log['progress'];?>% <?=$log['text'];?></div>
+    <?endforeach;?>
+  <?endif;?>
+  </div>                
               </div>
             </div>
           </div>   
@@ -374,7 +398,10 @@
 
 </div>
 </form>
-                
+
+<div>
+
+</div>                
               </div>
             </div>
           </div>
@@ -386,6 +413,34 @@
 <div id="jsAjaxLoad">
 <?include $_SERVER['DOCUMENT_ROOT'].'/backend/modules/'.$moduleName.'/includes/map.inc.php';?>
 </div> 
+
+<?if($stat!=false):?>
+<table class="table table-bordered mt-1" style="font-size: 14px;">
+      <thead>
+    <tr>
+      <th scope="col">Модель</th>
+      <th scope="col">Функция прибытия</th>
+      <th scope="col">Опоздание дней</th>
+      <th scope="col">Обработано заявок</th>
+      <th scope="col">Всего заявок</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?foreach($stat as $v):?>
+    <tr>
+      <td><?=$v['model_name'];?></td>
+      <td><?=$v['datetime_end'];?></td>
+      <td><?=$v['late_arrival'];?></td>
+      <td><?=$v['count'];?></td>
+      <td><?=$v['count_max'];?></td>
+    </tr>
+    <?endforeach;?>
+  </tbody>
+
+</table>
+<?endif;?>
+
+<iframe frameborder="0" src="https://datalens.yandex/ykczdp7145wsm?name_wggx=&point_a_e2kq=&_embedded=1&_no_controls=1" width="100%" height="400px"></iframe>
 
 <form method="post" action="" id="form_jsShowRoutesTable" class="hidden">
      <input type="hidden" name="module" value="<?=$moduleName;?>" />

@@ -2,6 +2,8 @@ from database import sql
 def set_placement():
     sql.truncate_table('placement')
     sql.set_placement()
+    # Удалим часть кораблей, в зависимости от настроек
+    sql.delete_placement()
     return None
 def set_placement_init():
     #Выполнить запрос для заполнения исходного положения кораблей

@@ -1,3 +1,5 @@
+import {EditInitPlacement} from "../Constant";
+
 export const rootPath = 'https://arcflot.ru'
 export const MapApi = `${rootPath}/backend/index.php?mod=map`;
 export const ShipsApi = `${rootPath}/backend/index.php?mod=ships`;

@@ -50,14 +50,16 @@ def wish_list_model(list_id=[], event_id=0):
 
         if (str(wish_list['id']) in list_id) or (list_id==[]):
             progress = 10 + round(progress_index/(len(wish_lists))*5)*10
-            sqlServer.set_events_progress(event_id, progress=progress, text='Моделируем время старта')
+
             # sqlServer.set_events_progress(event_id, progress=progress)
             datetime_start = wish_list['datetime_start']
             # Округлим время старта до целых часов
             datetime_start = hour_rounder(datetime_start)
             # Разрешим опоздание на несколько суток
             end = wish_list['datetime_end'] + timedelta(seconds=constant_late_arrival)
-            print(f'id={wish_list['id']} start={datetime_start}, end={end}')
+            # print(f'id={wish_list['id']} start={datetime_start}, end={end}')
+            text = f'Моделируем время старта заявка #{wish_list['id']} start={datetime_start}, end={end}'
+            sqlServer.set_events_progress(event_id, progress=progress, text=text)
 
             wish_list_parts = sql.get_wish_list_part(model_id=1, id=wish_list['id'])
             wish_list_model_one = []
@@ -122,8 +124,11 @@ def start_parts_route(datetime_start, wish_list_parts, caravan_id, end, wish_lis
         caravan_id += 1
         # Сформируем маршрут
         iceclass = sql.get_iceclass(wish['imo'])
-        pprint(wish)
-        create_routes_for_ship(point_a=wish['point_a'], point_b=wish['point_b'], datetime_start=datetime_start_part, caravan_id=caravan_id, sailing=wish['sailing'], imo=wish['imo'], iceclass=iceclass)
+        # pprint(wish)
+
+        date_start = '2022-03-01'
+        date_start = sql.get_date_start_by_ice_period(datetime_start_part.date())
+        create_routes_for_ship(point_a=wish['point_a'], point_b=wish['point_b'], datetime_start=datetime_start_part, caravan_id=caravan_id, sailing=wish['sailing'], imo=wish['imo'], iceclass=iceclass, forest_run=0, date_start=date_start)
         [c_datetime_end, time] = sql.get_trace_raiting(caravan_id)
         if time > 0:
             if end >= c_datetime_end:
@@ -152,8 +157,9 @@ def start_parts_route(datetime_start, wish_list_parts, caravan_id, end, wish_lis
 
 def hour_rounder(t):
     rounder_minute = sql.get_constant('rounder_minute')
+    # rounder_minute = sql.get_constant('step_shift')
     #Округлим с точностью до 15 минут
-    if 1==1:
+    if rounder_minute <= 60:
         h = (timedelta(minutes=math.ceil(t.minute/rounder_minute)*rounder_minute) + t.replace(second=0, microsecond=0, minute=0, hour=t.hour))
     else:
         t = t + timedelta(days=1)
@@ -177,7 +183,7 @@ def group_caravan(event_id=0):
     sql.truncate_table('schedule')
     sql.truncate_table('caravan_list')
     #Заполним уникальные комбинации с максимальным значением целевой функции
-    sql.set_wish_list_model_distinct()
+    # sql.set_wish_list_model_distinct()
     #Цикл по всем моделям
     models = sql.get_table('models')
     #Для каждой модели свой караван
@@ -185,20 +191,20 @@ def group_caravan(event_id=0):
 
     for index, model in models.iterrows():
         stop_count = 0
-        stop_max = 7
+        stop_max = sql.get_constant('teleport_max')
         progress = 20*(index+1)/len(models) + 70
         sqlServer.set_events_progress(event_id, progress=progress, text=f"Формируем караваны, модель {model['model_id']}")
         for id in range(1, 100):
             #Объединим в караваны
             caravan_id += 1
-            [caravan_id, stop] = create_caravan(model_id=model['model_id'], caravan_id=caravan_id, sailing='P')
-            progress = 70 + 10 * caravan_id / 100
-            sqlServer.set_events_progress(event_id, progress=progress, text=f"Формируем караван #{caravan_id}, модель {model['model_id']}")
+            [caravan_id, stop] = create_caravan(model_id=model['model_id'], caravan_id=caravan_id, sailing='P',event_id=event_id)
+            # progress = 70 + 10 * caravan_id / 100
+            # sqlServer.set_events_progress(event_id, progress=progress, text=f"Формируем караван #{caravan_id}, модель {model['model_id']}")
             if stop:
                 stop_count+=1
                 if stop_count < stop_max:
                     # Передвинем ледокол на новое место
-                    print(f'Телепортация ледокола #{stop_count}')
+                    print(f'Телепортация ледокола #{stop_count} из {stop_max}')
                     teleport_icebreaker_all(model_id=model['model_id'])
                 else:
                     #Остановим скрипт
@@ -208,7 +214,7 @@ def group_caravan(event_id=0):
         for id in range(1, 100):
             #Объединим в караваны
             caravan_id += 1
-            [caravan_id, stop] = create_caravan(model_id=model['model_id'], caravan_id=caravan_id, sailing='S')
+            [caravan_id, stop] = create_caravan(model_id=model['model_id'], caravan_id=caravan_id, sailing='S',event_id=event_id)
             if stop:
                 break
 def set_wish_list_part():
@@ -246,25 +252,30 @@ def set_wish_list_datetime_end():
     sql.set_wish_list_datetime_end()
     return None
 
-def create_caravan(model_id, caravan_id, sailing):
+def create_caravan(model_id, caravan_id, sailing,event_id):
     caravan_id_next = caravan_id
     if sailing=='P':
         max_ships_caravan = int(sql.get_constant('max_ships_caravan'))
         caravan_ids = sql.select_one_caravan_p(model_id=model_id, max_ships_caravan=max_ships_caravan)
     else:
         caravan_ids = sql.select_one_caravan_s(model_id=model_id)
-
+    datetime_end = None
     if len(caravan_ids)>0:
+        imo_icebreaker = 0
         for index, caravan in caravan_ids.iterrows():
-            print(caravan['id'], caravan['point_a'],'->', caravan['point_b'])
+            if datetime_end==None:
+                datetime_end = caravan['datetime_end']
+                progress = 70 + 10 * caravan_id / 100
+                sqlServer.set_events_progress(event_id, progress=progress,
+                                              text=f"Модель {model_id} караван #{caravan_id}, {caravan['point_a']}->{caravan['point_b']}")
             # Передвинем каждый корабль каравана на новое место
             sql.set_new_placement(model_id=model_id, imo=caravan['imo'], caravan=caravan, iceclass='*', icebreaker=0)
-            imo_icebreaker = 0
+
             if sailing == 'P':
                 # Выбор ледокола для каравана выполняем 1 раз и запоминием
                 if imo_icebreaker==0:
                     # Проверим наличие ледокола
-                    data = sql.get_placement_icebreaker(model_id, caravan['point_a'], caravan['point_b'], caravan['datetime_start'])
+                    data = sql.get_placement_icebreaker(model_id, caravan['point_a'], caravan['point_b'], caravan['datetime_start'], datetime_end)
                     if len(data) > 0:
                         for index, d in data.iterrows():
                             # Берем первый попавшийся свободный ледокол
@@ -272,36 +283,45 @@ def create_caravan(model_id, caravan_id, sailing):
                             break
                     else:
                         print('Нет ледокола')
-                if caravan['part_id'] == 2:
-                    # В случае, если проставлена вторая половина маршрута, и первая половина с типом S не была ещё проведена -то необходимо добавить первую половину маршрута
-                    # print(caravan)
-                    #Найдем первую половину маршрута и если караван не присвоен, присвоим его
-                    caravans_1 = sql.get_wish_list_part_1(model_id,caravan)
-                    if len(caravans_1)==1:
-                        for index, caravan_1 in caravans_1.iterrows():
-                            # pprint(caravan_1)
-                            caravan_id_next += 1
-                            sql.set_caravan_wish_list_parts(model_id=model_id, caravan=caravan_1, caravan_id=caravan_id_next)
-                            sql.insert_schedule_caravan(model_id=model_id, caravan=caravan_1, imo_icebreaker=0, caravan_id=caravan_id_next)
-                            sql.insert_caravan_list(model_id=model_id, imo=caravan_1['imo'], caravan_id=caravan_id_next)
-                    else:
-                        # print()
-                        pass
+                    if imo_icebreaker == 0:
+                        imo_icebreaker = caravan['imo_icebreaker']
+
+                    if imo_icebreaker != 0:
+                        # Передвинем ледокол на новое место
+                        sql.set_new_placement(model_id=model_id, imo=imo_icebreaker, caravan=caravan, iceclass='icebreaker', icebreaker=1)
+                    if imo_icebreaker != 0:
+                        # Включим ледокол в караван
+                        sql.insert_caravan_list(model_id=model_id, imo=imo_icebreaker, caravan_id=caravan_id)
+                # if caravan['part_id'] == 2:
+                #     # В случае, если проставлена вторая половина маршрута, и первая половина с типом S не была ещё проведена -то необходимо добавить первую половину маршрута
+                #     # print(caravan)
+                #     #Найдем первую половину маршрута и если караван не присвоен, присвоим его
+                #     caravans_1 = sql.get_wish_list_part_1(model_id,caravan)
+                #     if len(caravans_1)==1:
+                #         for index, caravan_1 in caravans_1.iterrows():
+                #             # pprint(caravan_1)
+                #             caravan_id_next += 1
+                #             sql.set_caravan_wish_list_parts(model_id=model_id, caravan=caravan_1, caravan_id=caravan_id_next)
+                #             sql.insert_schedule_caravan(model_id=model_id, caravan=caravan_1, imo_icebreaker=imo_icebreaker, caravan_id=caravan_id_next)
+                #             sql.insert_caravan_list(model_id=model_id, imo=caravan_1['imo'], caravan_id=caravan_id_next)
+                #     else:
+                #         # print()
+                #         pass
 
 
-            sql.set_caravan_wish_list_parts(model_id=model_id, caravan=caravan, caravan_id=caravan_id)
+            sql.set_caravan_wish_list_parts(model_id=model_id, caravan=caravan, caravan_id=caravan_id, datetime_end=datetime_end)
             sql.insert_caravan_list(model_id=model_id, imo=caravan['imo'], caravan_id=caravan_id)
         sql.insert_schedule_caravan(model_id=model_id, caravan=caravan, imo_icebreaker=imo_icebreaker, caravan_id=caravan_id)
         sql.set_wish_list(caravan['id'])
-        if imo_icebreaker!=0:
-            # Включим ледокол в караван
-            sql.insert_caravan_list(model_id=model_id,imo=imo_icebreaker, caravan_id=caravan_id)
+        # if imo_icebreaker!=0:
+        #     # Включим ледокол в караван
+        #     sql.insert_caravan_list(model_id=model_id,imo=imo_icebreaker, caravan_id=caravan_id)
 
         #Добавим строчку в placement, обновим местоположение ледокола
         # print(f'Создан караван из {len(caravan_ids)} кораблей')
-        if imo_icebreaker!=0:
-            #Передвинем ледокол на новое место
-            sql.set_new_placement(model_id=model_id, imo=imo_icebreaker, caravan=caravan, iceclass='icebreaker',icebreaker=1)
+        # if imo_icebreaker!=0:
+        #     #Передвинем ледокол на новое место
+        #     sql.set_new_placement(model_id=model_id, imo=imo_icebreaker, caravan=caravan, iceclass='icebreaker',icebreaker=1)
         stop = False
     else:
         stop = True

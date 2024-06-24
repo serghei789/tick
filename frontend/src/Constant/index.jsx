@@ -67,6 +67,8 @@ export const IceConditionsName = 'Ледовая обстановка';
 export const IceConditionsLink = 'https://datalens.yandex/j46nwa77at567';
 export const RoutesGraphName = 'Граф маршрутов';
 export const RoutesGraphLink = 'https://datalens.yandex/3nm61wcd2x36r';
+export const BestRoutesName = 'Лучшие маршруты';
+export const BestRoutesLink = 'https://datalens.yandex/j63arb1f7jog6';
 export const CaravansName = 'Караваны';
 export const CaravansLink = 'https://datalens.yandex/6rtbvq0c1prou';
 export const MetricsName = 'Метрики';
@@ -86,42 +88,8 @@ export const RealShipHistoryLink = 'https://datalens.yandex/vhzweqyermsej';
 export const ShipTrajectoryName = 'Траектория корабля';
 export const ShipTrajectoryLink = 'https://datalens.yandex/6saameu23c08u';
 
+export const VideoLink = 'https://youtu.be/fnylu3mha8c';
 
-export const Day = 'Day';
-export const BuyNow = 'Buy Now';
-export const Default = 'Default';
-export const BACK_TO_HOME_PAGE = 'BACK TO HOME PAGE';
-export const SampleCard = 'Sample Card';
-
-// faq anf knowledgebase
-export const Support = 'Support';
-
-// layout
-export const Loading = 'Loading...';
-
-export const QuickOption = 'Quick option';
-export const Document = 'Document';
-export const CheckFeatures = 'Check features';
-export const UnlimitedColor = 'Unlimited Color';
-export const Apply = 'Apply';
-export const Customizer = 'Customizer';
-export const Configuration = 'Configuration';
-export const CopyText = 'Copy text';
-export const LTR = 'LTR';
-export const RTL = 'RTL';
-export const Box = 'Box';
-export const SidebarSettings = 'Sidebar settings';
-export const Border = 'Border';
-export const IconColor = 'icon Color';
-
-export const RouterAnimation = 'Router Animation';
-export const ZoomFade = 'Zoom Fade';
-export const SildeFade = 'Silde Fade';
-export const FadeBottom = 'Fade Bottom';
-export const Fade = 'Fade';
-export const ZoomOut = 'Zoom Out';
-export const None = 'None';
-export const MixLayout = 'Mix Layout';
-
-export const Bookmark = 'Bookmark';
-export const Back = 'Back';
+export const BACK_TO_HOME_PAGE = 'На главную';
+export const Loading = 'Загрузка...';
+export const Back = 'Назад';

@@ -1,6 +1,8 @@
 import datetime
 from datetime import timedelta
 from functools import lru_cache
+from pprint import pprint
+
 import pymysql
 import sqlalchemy
 import pandas as pd
@@ -77,7 +79,7 @@ class SqlClass:
         query = f'''INSERT INTO sailing_section_parts(point_a, point_b, point_sailing, step) 
                     SELECT DISTINCT s.point_a, s.point_b, p.name, min(r.step) FROM wish_list as s inner 
                     JOIN routes_names as n ON n.point_a=s.point_a AND n.point_b=s.point_b inner 
-                    JOIN routes_recursion_fast as r ON r.route_id=n.id inner JOIN points as p ON p.point_id=r.point_id_a 
+                    JOIN routes_recursion_fast_d as r ON r.route_id=n.id and date_start='2022-03-01' inner JOIN points as p ON p.point_id=r.point_id_a 
                     WHERE p.name in (SELECT point_name from sailing_section ) 
                      and s.point_a<>p.name and s.point_b<>p.name
                     GROUP by s.point_a, s.point_b, p.name'''
@@ -105,8 +107,8 @@ class SqlClass:
         return data
     def set_wish_list_datetime_end(self):
         #В случае, если в wish_list не задана дата окончания маршрута - заполним наиболее возможной первой датой
-        query = f'''update wish_list as w set w.datetime_end = DATE_ADD(w.datetime_start, INTERVAL (select time from routes_names as r where r.point_a=w.point_a and r.point_b=w.point_b) second)
-'''
+        query = f'''update wish_list as w set w.datetime_end = DATE_ADD(w.datetime_start, INTERVAL (select time from routes_names as r where r.point_a=w.point_a and r.point_b=w.point_b)*3 second)
+        '''
         self.connection.execute(query)
 
         query = f'''update wish_list as w set w.datetime_end = w.datetime_start where w.datetime_end is NULL
@@ -127,14 +129,10 @@ class SqlClass:
                 pass
             else:
                 # Вставка частей маршрута
-                # print(f'wl={wl['point_a']} {wl['point_b']}')
                 for index, sp in sailing_section_parts.iterrows():
                     if index == 0:
                         point_a = wl['point_a']
                         point_b = sp['point_sailing']
-                    # elif index == len(sailing_section_parts)-1:
-                    #     point_a = last
-                    #     point_b = wl['point_b']
                     else:
                         point_a = last
                         point_b = sp['point_sailing']
@@ -169,18 +167,13 @@ class SqlClass:
         lng_b = self.connection.execute(query).fetchall()
 
         orientation = -int(sign(lng_a[0][0] - lng_b[0][0]))
-        # print(orientation, lng_a[0][0], lng_b[0][0])
-        # exit()
         return orientation
 
-    # def get_y_schedule(self):
-    #     query = f'''
-    #             SELECT DISTINCT point_a, point_b FROM y_schedule
-    #             '''
-    #     column_names = self.get_table_column_names('y_schedule')
-    #     data = self.connection.execute(query).fetchall()
-    #     data = pd.DataFrame(data, columns=['point_a', 'point_b'])
-    #     return data
+    def set_wish_list_by_y_schedule(self):
+        sql.truncate_table('wish_list')
+        query = f'''INSERT INTO wish_list(id, imo, point_a, point_b, datetime_start, datetime_end, max_cohesion, necessity, sailing, eta) SELECT id, imo, point_a, point_b, datetime_start, datetime_end, 0, 0, '', datetime_end FROM y_schedule'''
+        self.connection.execute(query)
+        return  None
 
     def check_routes_names(self, point_a, point_b):
         query = f'''SELECT * from routes_names where point_a='{point_a}' and point_b='{point_b}'
@@ -208,19 +201,6 @@ class SqlClass:
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=column_names)
         # pprint(data)
-        return data
-
-    @lru_cache(maxsize=100)
-    def get_routes_recursion(self, route_id):
-        query = f'''
-            SELECT *
-            FROM routes_recursion
-            WHERE route_id='{route_id}'
-            ORDER BY step ASC       
-            '''
-        column_names = self.get_table_column_names('routes_recursion')
-        data = self.connection.execute(query).fetchall()
-        data = pd.DataFrame(data, columns=column_names)
         return data
 
     def get_routes_names(self, point_a, point_b):
@@ -297,6 +277,13 @@ class SqlClass:
         data = self.connection.execute(query).fetchall()
         return data[0][0]
 
+    def set_constant(self, name, value):
+        query = f'''
+         UPDATE constant set value='{value}' WHERE name='{name}' 
+         '''
+        self.connection.execute(query)
+        return None
+
     def set_trace_intervals(self):
         query = f'''
              UPDATE trace SET id_interval =(select distinct id from time_intervals  where time_intervals.datetime_start <= trace.datetime and time_intervals.datetime_end >= trace.datetime limit 1  )
@@ -326,12 +313,12 @@ class SqlClass:
         self.connection.execute(query)
         return None
 
-    def set_caravan_wish_list_parts(self, model_id, caravan, caravan_id):
+    def set_caravan_wish_list_parts(self, model_id, caravan, caravan_id, datetime_end):
         query = f'''
                  UPDATE wish_list_parts
                  SET caravan_id='{caravan_id}',
                  datetime_start='{caravan['datetime_start']}',
-                 datetime_end='{caravan['datetime_end']}'
+                 datetime_end='{datetime_end}'
                  WHERE id='{caravan['id']}' 
                  and point_a='{caravan['point_a']}'
                  and point_b='{caravan['point_b']}'
@@ -432,20 +419,23 @@ class SqlClass:
 
     @lru_cache(maxsize=100)
     def get_min_cohesion(self, route_id, datetime_start):
+        date_start = sql.get_date_start_by_ice_period(datetime_start.date())
         # О пределим самую сложную ледовую сплоченность по каждой версии маршрута
         # А затем выберем самый простой маршрут
         query = f'''
                 SELECT min(f.min_cohesion) as cohesion from 
                     (select distinct version, min(e.avg_cohesion) as min_cohesion
-                    from routes_recursion
+                    from routes_recursion_fast_d as r
                     JOIN edge_cohesion as e ON
-                        e.edge=routes_recursion.edge 
-                        AND e.date_start<='{datetime_start.date()}'
-                        AND e.date_end>='{datetime_start.date()}'
+                        e.edge=r.edge 
+                        AND e.date_start='{date_start}'
+                     
                     WHERE route_id={route_id}
                        and min_cohesion > -1
+                        AND r.date_start='{date_start}'
                     GROUP BY version) as f
               '''
+        #   # AND e.date_end>='{datetime_start.date()}'
         # print(query)
         data = self.connection.execute(query).fetchall()
         if data:
@@ -488,51 +478,6 @@ class SqlClass:
 
         return None
 
-    # def set_recursion_depth(self, point_a, point_b):
-    #     query = f'''SELECT r.route_id as route_id , MIN(r.recursion_depth) as recursion_depth
-    #                 FROM routes_recursion_fast as r
-    #                 join routes_names as n on  n.id =r.route_id
-    #                 join points as p on p.name=n.point_b
-    #                 WHERE n.point_a ='{point_a}' and n.point_b='{point_b}' and r.lat=p.lat and r.lng=p.lng
-    #                  group by r.route_id
-    #     '''
-    #     print(query)
-    #     data = self.connection.execute(query).fetchall()
-    #     data = pd.DataFrame(data, columns=('route_id', 'recursion_depth'))
-    #
-    #     for index, d in data.iterrows():
-    #         query = f'''UPDATE `routes_names` SET recursion_depth={d['recursion_depth']} WHERE id={d['route_id']}'''
-    #         self.connection.execute(query)
-    #
-    #         query = f'''SELECT route_id, version, sum(e.distance)/sum(c.avg_cohesion) as time, avg(recursion_depth) as recursion_depth
-    #                     from  routes_recursion_fast as f
-    #                     join edge_cohesion as c on c.edge =f.edge
-    #                     join edge as e on e.edge =c.edge
-    #                     where route_id={d['route_id']}
-    #                     group  by route_id, version
-    #
-    #                     order by time ASC
-    #                     limit 1
-    #                     '''
-    #
-    #         #         having min(c.avg_cohesion) >= 10
-    #         print(query)
-    #         fast = self.connection.execute(query).fetchall()
-    #         fast = pd.DataFrame(fast, columns=('route_id', 'version', 'time','recursion_depth'))
-    #         for i, f in fast.iterrows():
-    #             query = f'''DELETE FROM `routes_recursion_fast` WHERE route_id={f['route_id']} and version<>{f['version']}'''
-    #
-    #             # query = f'''DELETE FROM `routes_recursion_fast` WHERE route_id={f['route_id']} and recursion_depth>{f['recursion_depth']}'''
-    #             self.connection.execute(query)
-    #
-    #             query = f'''UPDATE `routes_names` SET recursion_depth={f['recursion_depth']} WHERE id={f['route_id']}'''
-    #             self.connection.execute(query)
-    #
-    #
-    #
-    #
-    #     return None
-
     def set_recursion_depth(self, point_a, point_b):
         query = f'''SELECT r.route_id as route_id,  min(r.recursion_depth) as recursion_depth
                     FROM routes_recursion_fast as r 
@@ -544,25 +489,33 @@ class SqlClass:
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=('route_id', 'recursion_depth'))
 
-        for index, d in data.iterrows():
-            query = f'''SELECT route_id, version, sum(e.distance/c.avg_cohesion) as time, avg(recursion_depth) as recursion_depth
-                        from  routes_recursion_fast as f 
-                        join edge_cohesion as c on c.edge =f.edge 
-                        join edge as e on e.edge =c.edge 
-                        where route_id={d['route_id']}
-                        group  by route_id, version
-                        order by time ASC
-                        limit 1 
-                        '''
-            # print(query)
-            fast = self.connection.execute(query).fetchall()
-            fast = pd.DataFrame(fast, columns=('route_id', 'version', 'time', 'recursion_depth'))
-            for i, f in fast.iterrows():
-                query = f'''DELETE FROM `routes_recursion_fast` WHERE route_id={f['route_id']} and version<>{f['version']}'''
-                self.connection.execute(query)
+        #Перебираем все ледовые периоды
+        ice_periods = sql.get_ice_periods()
+        for index, period in ice_periods.iterrows():
+            for index, d in data.iterrows():
+                query = f'''SELECT route_id, version, sum(e.distance/c.avg_cohesion) as time, avg(recursion_depth) as recursion_depth
+                            from  routes_recursion_fast as f 
+                            join edge_cohesion as c on c.edge =f.edge and date_start='{period['start_date']}'
+                            join edge as e on e.edge =c.edge 
+                            where route_id={d['route_id']}
+                            group by route_id, version
+                            order by time ASC
+                            limit 1 
+                            '''
+                # print(query)
+                fast = self.connection.execute(query).fetchall()
+                fast = pd.DataFrame(fast, columns=('route_id','version', 'time', 'recursion_depth'))
 
-                query = f'''UPDATE `routes_names` SET recursion_depth={f['recursion_depth']}, time='{f['time']}' WHERE id={f['route_id']}'''
-                self.connection.execute(query)
+                #Проходимся по каждой дате отдельно, и оставляем лучший маршрут для каждой даты
+                for i, f in fast.iterrows():
+                    query = f'''INSERT INTO `routes_recursion_fast_d`(`route_id`, `version`, `step`, `lat`, `lng`, `edge`, `prev_lat`, `prev_lng`, `point_id_a`, `recursion_depth`, `date_start`) 
+                                select f.*, '{period['start_date']}' as date_start  from routes_recursion_fast as f where  route_id={f['route_id']} and version={f['version']}
+                                '''
+                    # print(query)
+                    self.connection.execute(query)
+
+                    query = f'''UPDATE `routes_names` SET recursion_depth={f['recursion_depth']}, time='{f['time']}' WHERE id={f['route_id']}'''
+                    self.connection.execute(query)
 
         return None
     def get_ice_periods(self):
@@ -583,6 +536,16 @@ class SqlClass:
         data = self.connection.execute(query).fetchall()
         return data[0][0]
 
+    # get_date_start_by_ice_period(datetime_start_part)
+    @lru_cache(100)
+    def get_date_start_by_ice_period(self,datetime_start):
+        query = f'''SELECT DISTINCT start_date FROM `square_ice` where start_date<='{datetime_start}' and end_date>='{datetime_start}' LIMIT 1 '''
+        data = self.connection.execute(query).fetchall()
+        if data[0][0] != None:
+            return data[0][0]
+        else:
+            print('Период не найден')
+            return '2022-03-01'
     def get_iceclass(self, imo):
         query = f'''SELECT iceclass FROM ships
                         WHERE imo='{imo}' LIMIT 1
@@ -599,13 +562,6 @@ class SqlClass:
          '''
         self.connection.execute(query)
         return None
-
-    # def insert_edge_cohesion(self,e,date_start,date_end):
-    #     query = f'''INSERT INTO `edge_cohesion`(`date_start`, `date_end`, `edge`, `avg_cohesion`, `min_cohesion`)
-    #     values ('{date_start}','{date_end}','{e['edge']}',0,0)
-    #     '''
-    #     self.connection.execute(query)
-    #     return None
     def add_track_points_cohesion(self, array):
         values = []
         for a in array:
@@ -624,7 +580,25 @@ class SqlClass:
         self.connection.execute(query)
         return None
 
+    def delete_placement(self):
+        limit_icebreakers = int(6 - sql.get_constant('limit_icebreakers'))
+
+        query = f'''SELECT distinct * FROM `placement_init` WHERE icebreaker=1 ORDER by imo DESC LIMIT {limit_icebreakers}'''
+        data = self.connection.execute(query).fetchall()
+        column_names = self.get_table_column_names('placement_init')
+        data = pd.DataFrame(data, columns=column_names)
+
+        for index, imo in data.iterrows():
+            query = f'''
+             DELETE FROM placement WHERE imo={imo['imo']}
+               '''
+            self.connection.execute(query)
+        return None
+
     def insert_schedule_caravan(self, model_id, caravan, imo_icebreaker, caravan_id):
+        if imo_icebreaker==0:
+            pass
+
         query = f'''
          INSERT INTO `schedule`(model_id, `caravan_id`, `imo_icebreaker`, `datetime_start`, `datetime_end`, `point_a`, `point_b`)
           select distinct model_id, caravan_id, '{imo_icebreaker}', datetime_start, datetime_start, point_a, point_b from wish_list_parts where caravan_id='{caravan_id}' and model_id={model_id} and part_id='{caravan['part_id']}'
@@ -632,12 +606,9 @@ class SqlClass:
         self.connection.execute(query)
         return None
 
-    def get_placement_icebreaker(self, model_id, point_a, point_b, datetime_start):
-        #Определим примерное время в пути
-        query = f'''select time from routes_names where point_a ='{point_a}' and point_b = '{point_b}' limit 1
-          '''
-        data = self.connection.execute(query).fetchall()
-        datetime_end = datetime_start + datetime.timedelta(seconds=data[0][0])
+    def get_placement_icebreaker(self, model_id, point_a, point_b, datetime_start, datetime_end):
+        column_names = self.get_table_column_names('placement')
+
         #Ищем ледокол в точке
         query = f'''
              SELECT *
@@ -650,37 +621,51 @@ class SqlClass:
              AND icebreaker='1'
              LIMIT 1
              '''
-        #             AND teleport = ''
+
         data = self.connection.execute(query).fetchall()
+        if len(data) != 0:
+            data = pd.DataFrame(data, columns=column_names)
+            return data
 
-        if len(data)==0:
-            # caravan['point_a']
-            query = f'''SELECT * from points  WHERE name='{point_a}' limit 1 '''
-            # print(query)
-            points = self.connection.execute(query).fetchall()
-            column_names = self.get_table_column_names('points')
-            points = pd.DataFrame(points, columns=column_names)
-            # print(query)
-            for index, point in points.iterrows():
-                #Выбирать ближайший ледокол
-                query = f'''
-                            SELECT pl.*
-                            FROM placement as pl
-                            LEFT join points as p on name=pl.teleport
-                            WHERE point_name='*'
-                            AND teleport != ''
-                            AND datetime_start<='{datetime_start}'
-                            AND datetime_end>='{datetime_end}'
-                            AND free=1
-                            AND model_id={model_id}
-                            AND icebreaker='1'
-                            ORDER BY (abs({point['lat']}-p.lat)+abs({point['lng']}-p.lng)) asc
-                            LIMIT 1
-                            '''
-                # print(query)
-                data = self.connection.execute(query).fetchall()
+        # Если в точке не нашли, анализируем любую исходную позицию без телепорта
+        query = f'''
+                    SELECT *
+                    FROM placement
+                    WHERE (point_name='*' AND teleport = '')
+                    AND datetime_start<='{datetime_start}'
+                    AND datetime_end>='{datetime_end}'
+                    AND free=1
+                    AND model_id={model_id}
+                    AND icebreaker='1'
+                    LIMIT 1
+                    '''
+        data = self.connection.execute(query).fetchall()
+        if len(data) != 0:
+            data = pd.DataFrame(data, columns=column_names)
+            return data
 
-        column_names = self.get_table_column_names('placement')
+        # Если не нашли, анализируем ближайшую позицию с телепортом
+        query = f'''SELECT * from points WHERE name='{point_a}' limit 1 '''
+        points = self.connection.execute(query).fetchall()
+        points = pd.DataFrame(points, columns=self.get_table_column_names('points'))
+
+        for index, point in points.iterrows():
+            #Выбирать ближайший ледокол
+            query = f'''
+                        SELECT pl.*
+                        FROM placement as pl
+                        LEFT join points as p on name=pl.teleport
+                        WHERE point_name='*'
+                        AND datetime_start<='{datetime_start}'
+                        AND datetime_end>='{datetime_end}'
+                        AND free=1
+                        AND model_id={model_id}
+                        AND icebreaker='1'
+                        ORDER BY (abs({point['lat']}-p.lat)+abs({point['lng']}-p.lng)) asc
+                        LIMIT 1
+                        '''
+            # print(query)
+        data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=column_names)
         return data
 
@@ -757,6 +742,9 @@ order by goal_func desc
 
     def set_new_placement(self, model_id, imo, caravan, iceclass, icebreaker):
         # Необходимо разбить строку на две части и между ними вставить целевую
+        if imo==8821797:
+            pass
+
         imo_placements = sql.get_imo_placement(model_id, imo, caravan)
         for index, imo_placement in imo_placements.iterrows():
             # Удалим старый промежуток
@@ -888,20 +876,23 @@ order by goal_func desc
         return None
 
     def insert_route_recursion_fast(self, value, version, route_id, recursion_depth):
-
+        global version_global
         if len(value) == 0:
             return
         else:
+            #Уничтожим возможные повторения
             new_value = list(set(value))
+
             values = []
             for v in new_value:
                 q = f'({route_id},{version},{v}, {recursion_depth})'
                 values.append(q)
-
-            query = f'''INSERT INTO `routes_recursion_fast`(`route_id`, `version`, `step`, `lat`, `lng`, `edge`, `prev_lat`, `prev_lng`, `point_id_a`, `recursion_depth`)
-                       VALUES {','.join(values)}'''
-
-            self.connection.execute(query)
+        # pprint(value)
+        query = f'''INSERT INTO `routes_recursion_fast`(`route_id`, `version`, `step`, `lat`, `lng`, `edge`, `prev_lat`, `prev_lng`, `point_id_a`, `recursion_depth`)
+                   VALUES {','.join(values)}
+                '''
+        #ON DUPLICATE KEY UPDATE route_id='{route_id}', version='{version}', step='{step}'
+        self.connection.execute(query)
 
         return None
 
@@ -926,10 +917,6 @@ order by goal_func desc
         return None
 
     def insert_edge_cohesion(self, value):
-        # query = f'''INSERT INTO `edge_cohesion`(`date_start`, `date_end`, `edge`, `avg_cohesion`, `min_cohesion`)
-        #  values ('{date_start}','{date_end}','{e['edge']}',0,0)
-        #  '''
-        # self.connection.execute(query)
         values = []
         for v in value:
             v = f'({v})'
@@ -1054,28 +1041,6 @@ order by goal_func desc
             data = self.connection.execute(query).fetchall()
         return data[0][0]
 
-    def insert_routes_recursion(self, route_id, version, step, lat, lng, edge, lat_a, lng_a, point_id_a,
-                                recursion_depth):
-        query = f'''
-             INSERT INTO routes_recursion
-             (route_id, version, step, lat, lng, edge,  prev_lat, prev_lng, point_id_a, recursion_depth)
-             VALUES (
-                   '{route_id}'
-                 , '{version}'
-                 , '{step}'
-                 , '{lat}'
-                 , '{lng}'
-                 , '{edge}'
-                 , '{lat_a}'
-                 , '{lng_a}'
-                 , '{point_id_a}'
-                 , '{recursion_depth}'
-             ) 
-             ON DUPLICATE KEY UPDATE route_id='{route_id}', version='{version}', step='{step}'
-             '''  # ON DUPLICATE KEY нужен для сабетты
-        self.connection.execute(query)
-        return None
-
     @lru_cache(maxsize=100)
     def get_recursion_depth(self, route_id):
         query = f'''select recursion_depth from routes_names where id={route_id} limit 1
@@ -1087,27 +1052,25 @@ order by goal_func desc
             0
 
     @lru_cache(maxsize=100)
-    def get_next_steps(self, route_id, lat_a, lng_a):
+    def get_next_steps(self, route_id, lat_a, lng_a, date_start):
         query = f'''
          SELECT *
          FROM routes_rec where 
          route_id='{route_id}'
          AND lat_a='{lat_a}'
          AND lng_a='{lng_a}'
+         AND date_start='{date_start}'
          '''
         # print(query)
         data = self.connection.execute(query).fetchall()
         column_names = self.get_table_column_names('routes_rec')
         data = pd.DataFrame(data, columns=column_names)
-        # if len(data)==0:
-        #     pass
-        #     print('Ёбаные точки')
         return data
 
     def insert_route_rec(self):
         query = f'''DELETE FROM routes_rec'''
         self.connection.execute(query)
-        query = f'''INSERT INTO routes_rec (SELECT DISTINCT route_id, prev_lat as lat_a, prev_lng as lng_a, lat as lat_b,lng as lng_b,edge FROM routes_recursion_fast);'''
+        query = f'''INSERT INTO routes_rec (SELECT DISTINCT route_id, prev_lat as lat_a, prev_lng as lng_a, lat as lat_b,lng as lng_b,edge, date_start FROM routes_recursion_fast_d);'''
         # print(query)
         self.connection.execute(query)
         return None
@@ -1125,17 +1088,6 @@ order by goal_func desc
         data = pd.DataFrame(data, columns=('start', 'end'))
         return data
 
-    def set_wish_list_model_distinct(self):
-        sql.truncate_table('wish_list_model_distinct')
-        # query = f'''insert into wish_list_model_distinct
-        #             select model_id, id, imo, point_a, point_b, datetime_start, sailing, max(goal_func) FROM wish_list_model group by model_id, id, imo, point_a, point_b, datetime_start, sailing
-        #       '''
-        # self.connection.execute(query)
-        return None
-
-    # update wish_list set caravan_id =0;
-    # update wish_list_parts  set caravan_id=0;
-
     def init_wish_list(self):
         # query = f'''update wish_list set caravan_id =0;'''
         # self.connection.execute(query)
@@ -1150,31 +1102,29 @@ order by goal_func desc
         query = f'''SELECT  wl.model_id, wl.point_a, wl.point_b, wl.datetime_start, sum(wl.goal_func) as sum_goal_func 
 FROM wish_list_model as wl
 join wish_list_parts as wp on wp.id=wl.id and wp.point_a=wl.point_a and wp.point_b=wl.point_b and wp.model_id=wl.model_id and wp.model_id = {model_id}
-join placement as p_i on p_i.model_id = wl.model_id 
-                     and p_i.model_id  = {model_id}
+join placement as p_i on p_i.model_id  = {model_id}
                      and p_i.free = 1 
                      and p_i.icebreaker = 1 
                      and (p_i.point_name = wl.point_a or p_i.point_name = '*' ) 
-                     and wl.datetime_start between p_i.datetime_start and p_i.datetime_end
-                     and wl.datetime_end between p_i.datetime_start and p_i.datetime_end
-join placement as p_s on p_s.model_id = wl.model_id 
-                     and p_s.model_id = {model_id}
+                     and p_i.datetime_start <= wl.datetime_start 
+                     and p_i.datetime_end >= wl.datetime_end 
+join placement as p_s on p_s.model_id = {model_id}
                      and p_s.free = 1 
                      and p_s.imo = wl.imo 
                      and (p_s.point_name = wl.point_a or p_s.point_name = '*' or p_s.point_name = wl.point_b) 
-                     and wl.datetime_start between p_s.datetime_start and p_s.datetime_end
-                     and wl.datetime_end   between p_s.datetime_start and p_s.datetime_end
+                     and p_s.datetime_start <= wl.datetime_start 
+                     and p_s.datetime_end >= wl.datetime_end 
     where wl.model_id={model_id} 
       and wp.caravan_id = 0 
 group by point_a, point_b, datetime_start  ORDER by sum_goal_func desc, datetime_start asc  
 limit 1'''
-        #and (wl.sailing = 'P' or wl.sailing = 'D' or wl.sailing = 'S')
-        # print(query)
+
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=('model_id', 'point_a', 'point_b', 'datetime_start', 'sum_goal_func'))
 
         for index, d in data.iterrows():
-            query = f''' SELECT distinct wl.id, wl.datetime_start,  wl.datetime_end, wl.point_a, wl.point_b, wl.imo, wp.part_id , max(wl.necessity) as necessity  from
+            query = f''' SELECT distinct wl.id, wl.datetime_start,  wl.datetime_end, wl.point_a, wl.point_b, wl.imo, wp.part_id , max(wl.necessity) as necessity, min( p_i.imo ) as imo_icebreaker 
+            from
 
  wish_list_model as wl
                          
@@ -1183,24 +1133,32 @@ limit 1'''
 join placement as p_s on p_s.model_id = {model_id}
                      and p_s.free = 1 
                      and p_s.imo = wl.imo 
-                     and (p_s.point_name = wl.point_a or p_s.point_name = '*' or p_s.point_name = wl.point_b ) 
-                     and wl.datetime_start between p_s.datetime_start and p_s.datetime_end
-                     and wl.datetime_end   between p_s.datetime_start and p_s.datetime_end
-                     
+                     and (p_s.point_name = wl.point_a or p_s.point_name = '*' or p_s.point_name = wl.point_b)
+                     and p_s.datetime_start <= wl.datetime_start 
+                     and p_s.datetime_end >= wl.datetime_end 
+ 
+ join placement as p_i on p_i.model_id  = {model_id}
+                     and p_i.free = 1 
+                     and p_i.icebreaker = 1 
+                     and (p_i.point_name = wl.point_a or p_i.point_name = '*' ) 
+                     and p_i.datetime_start <= wl.datetime_start 
+                     and p_i.datetime_end >= wl.datetime_end 
+ 
      where          wl.model_id =  {model_id}
+                and wp.caravan_id = 0 
                 and wl.point_a = '{d['point_a']}'
                 and wl.point_b = '{d['point_b']}'
                 and wl.datetime_start = '{d['datetime_start']}'
-                and (wl.sailing = 'P' or wl.sailing = 'D' or wl.sailing = 'S')
+       
                  group by wl.id, wl.datetime_start,  wl.datetime_end, wl.point_a, wl.point_b, wl.imo, wp.part_id
-                order by max(wl.necessity) DESC
+                order by  max(wl.datetime_end) DESC
 LIMIT {max_ships_caravan}
             '''
             break
         # print(query)
         data = self.connection.execute(query).fetchall()
 
-        data = pd.DataFrame(data, columns=('id', 'datetime_start', 'datetime_end', 'point_a', 'point_b', 'imo', 'part_id', 'necessity'))
+        data = pd.DataFrame(data, columns=('id', 'datetime_start', 'datetime_end', 'point_a', 'point_b', 'imo', 'part_id', 'necessity', 'imo_icebreaker'))
         return data
 
     def get_wish_list_part_1(self, model_id, caravan):
@@ -1219,9 +1177,6 @@ LIMIT {max_ships_caravan}
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=(
         'id', 'datetime_start', 'datetime_end', 'point_a', 'point_b', 'imo', 'part_id', 'caravan_id'))
-        # d=[]
-        # for index, d in data.iterrows():
-        #     break
         return data
 
     def select_one_caravan_s(self, model_id):
@@ -1243,10 +1198,6 @@ LIMIT {max_ships_caravan}
                     where wl.model_id={model_id}
                     order by  wl.datetime_end asc
                     limit 1'''
-        #   WHERE  wl.imo = '9834296'
-        #   order by  goal_func desc
-        #  order by wl.datetime_end asc
-
 
         data = self.connection.execute(query).fetchall()
         data = pd.DataFrame(data, columns=(
@@ -1292,6 +1243,5 @@ LIMIT {max_ships_caravan}
         query = f'''INSERT INTO `square_status`(`row`, `col`, `status`) VALUES {','.join(values)}'''
         self.connection.execute(query)
         return None
-
 
 sql = SqlClass()

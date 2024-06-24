@@ -17,7 +17,7 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsShowRoutesTable') {
         $routesFilter = " AND ss.imo IN (".$imo.") ";
     }
     
-    $rt = db_query("SELECT DISTINCT
+    $sql = "SELECT DISTINCT
     wp.point_a, 
     wp.datetime_start, 
     wp.point_b, 
@@ -39,7 +39,9 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsShowRoutesTable') {
     AND tr.raiting=".$raiting_id." 
     AND t.id_interval=".$id_interval." 
     ".$routesFilter."
-    ORDER BY t.id_interval");
+    ORDER BY t.id_interval, wp.datetime_start ASC";
+    
+    $rt = db_query($sql);
     
     if ($rt != false) {
         // подключаем шаблон таб. и заполняем его данными
@@ -102,31 +104,11 @@ if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsStopEditRoutes') {
 
 // запрос на восстановление данных
 if (isset($_POST['form_id']) && $_POST['form_id'] == 'form_jsGetDefault') {
-    /*
-    $tables = array('caravan_list',
-       'track_points',
-       'constant',
-       'models',
-       'models_metrics',
-       'placement',
-       'schedule',
-       'time_intervals',
-       'trace',
-       'trace_intervals',
-       'trace_raiting',
-       'routes_names',
-       'routes_rec',
-       'routes_recursion',
-       'routes_recursion_fast',
-       'wish_list_parts',
-       'constant',
-       'edge',
-       'points',
-       'wish_list');
-      */ 
+    
     $tables = array('caravan_list',
     'track_points',
     'constant',
+    'ships',
     'models',
     'models_metrics',
     'placement',

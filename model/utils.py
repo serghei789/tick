@@ -32,7 +32,7 @@ def get_next(id_a,lat_a,lng_a,id_b,lat_b,lng_b,orientation, version, step, route
         # Успех - достигнута конечная точка маршрута
         result_all = True
         version_global += 1
-        sql.insert_route_recursion_fast(value=route_recursion_fast, version=version_global,route_id=route_id, recursion_depth=recursion_depth)
+        sql.insert_route_recursion_fast(value=route_recursion_fast, version=version_global, route_id=route_id, recursion_depth=recursion_depth)
         recursion_global = recursion_depth+1
     elif recursion_depth > recursion_depth_max: #Ограничим глубину рекурсии
         pass
@@ -55,11 +55,11 @@ def get_next(id_a,lat_a,lng_a,id_b,lat_b,lng_b,orientation, version, step, route
                 result = get_next(point['point_id'], point['lat'], point['lng'],id_b, lat_b, lng_b, point['orientation'], version, step, route_id, father, route_recursion_fast)
                 if result==True:
                     # Следующая версия должна появлятся, только если был успех
-                    sql.insert_routes_recursion(route_id, version_global, step, point['lat'], point['lng'], point['edge'], lat_a, lng_a, point['point_id'], recursion_depth)
+                    # sql.insert_routes_recursion(route_id, version_global, step, point['lat'], point['lng'], point['edge'], lat_a, lng_a, point['point_id'], recursion_depth)
                     result_all = True
-                    if step == 1:
-                        #Сохраним шаг №0
-                        sql.insert_routes_recursion(route_id, version, 0, lat_a, lng_a, 0, 0, 0, point['point_id'], recursion_depth)
+                    # if step == 1:
+                    #     #Сохраним шаг №0
+                    #     sql.insert_routes_recursion(route_id, version, 0, lat_a, lng_a, 0, 0, 0, point['point_id'], recursion_depth)
                     version += 1
 
                 #Вернёмся к исходному значению
@@ -70,11 +70,12 @@ def get_next(id_a,lat_a,lng_a,id_b,lat_b,lng_b,orientation, version, step, route
 def create_routes(list_id=[],table='wish_list', event_id=0):
     progress = 15
     #Удалим прежние маршруты
-    if table=='wish_list':
+    if table=='y_schedule':
+        sql.set_wish_list_by_y_schedule()
         pass
         progress = 5
         # sql.truncate_table('routes_recursion_fast')
-        # sql.truncate_table('routes_recursion')
+        # sql.truncate_table('routes_recursion_fast_d')
         # sql.truncate_table('routes_names')
     else:
         pass

@@ -10,6 +10,7 @@
     $numberBid = array();
     $models = false;
     $shipsList = array();
+    $sailing = array();
 
     $uniqIntervals = array();
     $dateTimeIntervals = array();
@@ -31,49 +32,29 @@
     $minInterval = 0;
     $maxInterval = 0;
     
-    $sql = "SELECT t.*, ti.datetime_start, ti.datetime_end, wl.point_a, wl.point_b, wp.id, tr.raiting, ss.name, ss.iceclass, ss.imo, ss.map_icon, s.model_id 
-FROM schedule as s 
-JOIN caravan_list as cl ON cl.caravan_id = s.caravan_id and cl.model_id = cl.model_id 
-INNER JOIN ships as ss ON ss.imo = cl.imo 
-inner JOIN wish_list_parts as wp 
-  ON wp.caravan_id = cl.caravan_id 
-  and wp.model_id = s.model_id 
-  and wp.point_a = s.point_a 
-  and wp.point_b = s.point_b 
-  and wp.datetime_start = s.datetime_start
-INNER JOIN wish_list as wl ON wl.id = wp.id 
-inner JOIN trace_intervals AS t ON t.caravan_id = cl.caravan_id 
-inner JOIN time_intervals as ti ON ti.id = t.id_interval 
-inner JOIN trace_raiting as tr ON tr.caravan_id = t.caravan_id AND tr.route_id = t.route_id AND tr.version = t.version 
-WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval, ss.iceclass";
- /*   
-    $sql = "SELECT t.*,
-    ti.datetime_start,
-    ti.datetime_end,
-    wl.point_a,
-    wl.point_b,
-    wl.id,
-    tr.raiting,
-    ss.name,
-    ss.iceclass,
-    ss.imo,
-    ss.map_icon,
-    s.model_id
+    $sql = "SELECT t.*, 
+    ti.datetime_start, 
+    ti.datetime_end, 
+    wl.point_a, 
+    wl.point_b, 
+    wp.id, 
+    wp.sailing,
+    tr.raiting, 
+    ss.name, 
+    ss.iceclass, 
+    ss.imo, 
+    ss.map_icon, 
+    s.model_id 
     FROM schedule as s 
-    JOIN trace_intervals AS t ON t.caravan_id = s.caravan_id  
-    LEFT JOIN time_intervals as ti ON ti.id =  t.id_interval
-    LEFT JOIN trace_raiting as tr 
-    ON tr.caravan_id = t.caravan_id 
-    AND tr.route_id = t.route_id
-    AND tr.version = t.version
-    JOIN caravan_list as cl ON cl.caravan_id = t.caravan_id and cl.model_id = s.model_id 
-    JOIN ships as ss ON ss.imo = cl.imo
-    LEFT JOIN wish_list_parts as wp ON wp.caravan_id = t.caravan_id and wp.model_id = s.model_id  and wp.imo = ss.imo
-    LEFT JOIN wish_list as wl ON wl.id = wp.id 
-    WHERE s.model_id=".$model_id." 
-    ".$filter." AND tr.raiting <= 5
-    ORDER BY t.id_interval";
-   */ 
+    JOIN caravan_list as cl ON cl.caravan_id = s.caravan_id and cl.model_id = cl.model_id 
+    INNER JOIN ships as ss ON ss.imo = cl.imo 
+    INNER JOIN wish_list_parts as wp ON wp.caravan_id = cl.caravan_id AND wp.model_id = s.model_id AND wp.point_a = s.point_a AND wp.point_b = s.point_b AND wp.datetime_start = s.datetime_start
+    INNER JOIN wish_list as wl ON wl.id = wp.id 
+    INNER JOIN trace_intervals AS t ON t.caravan_id = cl.caravan_id 
+    INNER JOIN time_intervals as ti ON ti.id = t.id_interval 
+    INNER JOIN trace_raiting as tr ON tr.caravan_id = t.caravan_id AND tr.route_id = t.route_id AND tr.version = t.version 
+    WHERE s.model_id=".$model_id." ".$filter." 
+    ORDER BY t.id_interval, ss.iceclass";
    
     $intervals = db_query($sql);
  
@@ -156,6 +137,8 @@ WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval, ss.iceclass";
          
          $trackingAllPoints[] = $in['lat'].':'.$in['lng'];
          // ----------------------------------------------------
+         
+         $sailing[ $uniqId ] = $in['sailing'];
         
     }    
     
@@ -506,7 +489,7 @@ WHERE s.model_id=".$model_id." ".$filter." ORDER BY t.id_interval, ss.iceclass";
     AND tr.raiting=".$raiting_id." 
     AND t.id_interval=".$minInterval." 
     ".$routesFilter."
-    ORDER BY t.id_interval");
+    ORDER BY t.id_interval, wp.datetime_start ASC");
     
     if ($rt != false) {
         // подключаем шаблон таб. и заполняем его данными

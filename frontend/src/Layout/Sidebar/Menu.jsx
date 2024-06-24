@@ -1,11 +1,10 @@
 import {
-  AlgorithmName,
-  BlockSchemeName,
+  BestRoutesName,
   CaravansName,
   CompoundRoutesName,
   ConditionsName, IceConditionsName, IntegralSpeedName, MetricsName, ModelMetricsName,
-  ModelsName, PresentationName, RealShipHistoryName,
-  RequestsName, RoutesGraphName, SheduleGanttName, SheduleTableName, ShipHistoryName,
+  ModelsName, RealShipHistoryName,
+  RequestsName, RoutesGraphName, ShipHistoryName,
   ShipsPlacementName, ShipTrajectoryName,
   SpeedControlName
 } from "../../Constant";
@@ -30,12 +29,9 @@ export const MENUITEMS = [
       {
         icon: 'calendar',
         title: 'Расписание',
-        type: 'sub',
-        active: false,
-        children: [
-          { path: `${process.env.PUBLIC_URL}/schedule/gantt`, title: SheduleGanttName, type: "link" },
-          { path: `${process.env.PUBLIC_URL}/schedule/table`, title: SheduleTableName, type: "link" },
-        ]
+        type: 'link',
+        path: `${process.env.PUBLIC_URL}/schedule`,
+        active: false
       },
       {
         icon: 'charts',
@@ -43,11 +39,12 @@ export const MENUITEMS = [
         type: "sub",
         active: false,
         children: [
+          { path: `${process.env.PUBLIC_URL}/analytics/integralspeed`, title: IntegralSpeedName, type: "link" },
           { path: `${process.env.PUBLIC_URL}/analytics/iceconditions`, title: IceConditionsName, type: "link" },
           { path: `${process.env.PUBLIC_URL}/analytics/routes`, title: RoutesGraphName, type: "link" },
+          { path: `${process.env.PUBLIC_URL}/analytics/bestroutes`, title: BestRoutesName, type: "link" },
           { path: `${process.env.PUBLIC_URL}/analytics/caravans`, title: CaravansName, type: "link" },
           { path: `${process.env.PUBLIC_URL}/analytics/metrics`, title: MetricsName, type: "link" },
-          { path: `${process.env.PUBLIC_URL}/analytics/integralspeed`, title: IntegralSpeedName, type: "link" },
         ],
       },
       {
@@ -74,12 +71,20 @@ export const MENUITEMS = [
       {
         icon: 'form',
         title: 'Документация',
-        type: 'sub',
-        children: [
-          { path: `${process.env.PUBLIC_URL}/documentation/blockScheme`, title: BlockSchemeName, type: "link" },
-          { path: `${process.env.PUBLIC_URL}/documentation/algorithm`, title: AlgorithmName, type: "link" },
-          { path: `${process.env.PUBLIC_URL}/documentation/presentation`, title: PresentationName, type: "link" },
-        ],
+        path: `${process.env.PUBLIC_URL}/algorithm`,
+        type: 'link',
+      },
+      {
+        icon: 'learning',
+        title: 'Блок-схема',
+        path: `${process.env.PUBLIC_URL}/blockScheme`,
+        type: 'link',
+      },
+      {
+        icon: 'gallery',
+        title: 'Презентация',
+        path: `${process.env.PUBLIC_URL}/presentation`,
+        type: 'link',
       },
       {
         icon: 'file',
@@ -94,6 +99,13 @@ export const MENUITEMS = [
           { path: `${process.env.PUBLIC_URL}/tables/speed`, title: SpeedControlName, type: "link" },
         ],
       },
+      {
+        icon: 'gallery',
+        title: 'Видео',
+        type: "link",
+        path: `${process.env.PUBLIC_URL}/video`,
+        active: false,
+      },
     ],
   }, {
     menutitle: 'Контакты',
@@ -102,14 +114,6 @@ export const MENUITEMS = [
       icon: 'support-tickets',
       type: 'link',
       path: `https://t.me/mgarbuzenko`
-      // children: [
-      //   {
-      //     active: false,
-      //     path: `http://google.com`,
-      //     title: 'Гугл',
-      //     type: 'link',
-      //   },
-      // ],
     },]
   }
 ];

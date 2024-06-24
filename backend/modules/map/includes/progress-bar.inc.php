@@ -36,5 +36,18 @@
         }
       });       
      }, 5000 );
+     
+     setInterval( function() {
+       $.ajax({
+        type: "GET",
+        url: "https://arcflot.ru/backend/index.php?mod=logs",
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function (data){
+           $('#jsAjaxLoadLogs').html(data); 
+        }
+      });       
+     }, 1000 );
   });
 </script>

@@ -59,4 +59,22 @@
  }
  
  // вытаскиваем список заявок
- $bidsList = db_query("SELECT id FROM wish_list");
+ $bidsList = db_query("SELECT w.id, 
+ w.point_a, 
+ w.point_b,
+ ships.name 
+ FROM y_schedule AS w 
+ LEFT JOIN ships ON w.imo = ships.imo");
+ 
+ // сводная статистика по моделям
+ $stat = db_query("SELECT m.model_id, 
+ m.model_name, 
+ mm.datetime_end, 
+ mm.late_arrival, 
+ mm.count, 
+ (SELECT count(id) FROM wish_list_parts WHERE model_id=mm.model_id) as count_max 
+ FROM models_metrics as mm 
+ JOIN models as m ON m.model_id=mm.model_id");
+ 
+ // вытаскиваем логи пересчёта моделей
+ $logs = db_query("SELECT * FROM logs ORDER BY id DESC LIMIT 100");

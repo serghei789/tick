@@ -12,7 +12,7 @@ def create_schedule():
     sql.insert_schedule()
     return None
 
-def run_next_step(route_step, route_trace, sailing, imo, iceclass):
+def run_next_step(route_step, route_trace, sailing, imo, iceclass, forest_run, date_start):
     global version
     # print(f'Глубина рекурсии {len(inspect.getouterframes(inspect.currentframe()))}')
     #Важно запомнить значения до выполнения цикла рекурсии, чтобы исключить влияние предыдущих шагов рекурсии
@@ -21,7 +21,7 @@ def run_next_step(route_step, route_trace, sailing, imo, iceclass):
     route_step_index = dict(route_step)
 
     #Метод рекурсивно перебирает все возможные шаги маршрута route_step
-    next_steps = sql.get_next_steps(route_id=route_step['route_id'],  lat_a=route_step['lat'], lng_a=route_step['lng'])
+    next_steps = sql.get_next_steps(route_id=route_step['route_id'],  lat_a=route_step['lat'], lng_a=route_step['lng'], date_start=date_start)
     recursion_depth = sql.get_recursion_depth(route_step['route_id'])
     if len(next_steps) == 0:
         #Конец маршрута
@@ -35,7 +35,7 @@ def run_next_step(route_step, route_trace, sailing, imo, iceclass):
         for index, next_step in next_steps.iterrows():
             # pprint(next_step)
 
-            if check_sailing_trace(route_step=route_step, sailing=sailing, imo=imo, edge=next_step['edge']) == True:
+            if check_sailing_trace(route_step=route_step, sailing=sailing, imo=imo, edge=next_step['edge'], forest_run=forest_run) == True:
                 # Построим траекторию движения из точки A в точку B
                 route_step['version'] = version
                 route_step['lat'] = next_step['lat_b']
@@ -44,7 +44,7 @@ def run_next_step(route_step, route_trace, sailing, imo, iceclass):
 
                 #Накапливаем маршрут
                 route_trace.extend(trace)
-                run_next_step(route_step, route_trace, sailing, imo, iceclass)
+                run_next_step(route_step, route_trace, sailing, imo, iceclass, forest_run, date_start)
 
                 # Вернемся к исходному значению
                 route_step = dict(route_step_index)
@@ -55,7 +55,7 @@ def run_next_step(route_step, route_trace, sailing, imo, iceclass):
         return None
 
 
-def create_routes_for_ship(point_a, point_b, datetime_start, caravan_id, sailing, imo, iceclass):
+def create_routes_for_ship(point_a, point_b, datetime_start, caravan_id, sailing, imo, iceclass, forest_run, date_start):
     global version
     # print(point_a, point_b)
     # Возможные маршруты для расписания
@@ -72,7 +72,7 @@ def create_routes_for_ship(point_a, point_b, datetime_start, caravan_id, sailing
         # Новая нумерация версий для каждого маршрута
         version = 0
 
-        run_next_step(route_step=route_step, route_trace=route_trace, sailing=sailing, imo=imo, iceclass=iceclass)
+        run_next_step(route_step=route_step, route_trace=route_trace, sailing=sailing, imo=imo, iceclass=iceclass, forest_run=forest_run, date_start=date_start)
         sql.insert_raiting(caravan_id, routes_names_row['id'])
 
 def run_schedule(caravan_id=0, event_id=0):
@@ -105,7 +105,8 @@ def run_schedule(caravan_id=0, event_id=0):
             sailing = 'P'
 
         iceclass = sql.get_iceclass(imo)
-        create_routes_for_ship(point_a=schedule_row['point_a'], point_b=schedule_row['point_b'], datetime_start=schedule_row['datetime_start'], caravan_id=schedule_row['caravan_id'], sailing=sailing, imo=imo, iceclass=iceclass)
+        date_start = sql.get_date_start_by_ice_period(datetime_start=schedule_row['datetime_start'])
+        create_routes_for_ship(point_a=schedule_row['point_a'], point_b=schedule_row['point_b'], datetime_start=schedule_row['datetime_start'], caravan_id=schedule_row['caravan_id'], sailing=sailing, imo=imo, iceclass=iceclass, forest_run=1, date_start=date_start)
 
         # create_routes_for_ship(schedule_row['point_a'], schedule_row['point_b'], schedule_row['datetime_start'], schedule_row['caravan_id'], schedule_row['sailing'], imo )
 

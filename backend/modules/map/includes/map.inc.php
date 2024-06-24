@@ -1,9 +1,15 @@
-<div id="polzunok" class="mt-2 mb-3"></div>
-
 <div class="row">
-  <div class="col-md-2"><button class="jsPlayAnimation btn btn-primary w-100" data-status="1">Старт</button></div>
-  <div class="col-md-2">
-    <input type="text" name="intervalDate" id="jsShowDateInMap" value="<?=$minIntervalDate;?>" class="form-control jsDateTimepicker" />
+  <div style="width: 5%; padding: 0;">
+    <button class="jsPlayAnimation btn btn-primary startPlayBtn" data-status="1" style="padding: 3px 8px;">
+      <i class="bi bi-play"></i>
+    </button>
+  </div>
+  <div style="width: 85%; padding: 0;">
+    <div id="polzunok" class="mt-2 mb-3"></div>
+  </div>
+  
+  <div style="width: 8%; margin-left: 1%;  padding: 0;">
+    <input style="margin-top: -17px;" type="text" name="intervalDate" id="jsShowDateInMap" value="<?=$minIntervalDate;?>" class="form-control jsDateTimepicker" />
   </div>
 </div>
 
@@ -157,10 +163,17 @@
                 var caravanList = <?=json_encode($caravanListArr,true);?>;
                 var caravanListBaloon = <?=json_encode($caravanListBaloon,true);?>;
                 var intervalCoords = <?=json_encode($intervalCoords,true);?>;
+                var sailing = <?=json_encode($sailing,true);?>;
                 
                              
                $.each(tracking, function(uniqId,v) {
                   
+                 var routeColor = '#FFA500';
+                 
+                 if (sailing[uniqId] == 'S') {
+                    routeColor = '#008000';
+                 }
+                 
                  var coords = JSON.parse('['+v+']');
                  var geometry = coords,
                  properties = {
@@ -168,7 +181,7 @@
                  },
                  options = {
                  draggable: false,
-                 strokeColor: '#2b6ed1',
+                 strokeColor: routeColor,
                  strokeWidth: 3,
                  strokeStyle: 'dash'
                  },
@@ -177,6 +190,7 @@
                  myMap.geoObjects.add(polylineArr);
                  
                  var startCoords =  JSON.parse(startRoutes[uniqId]);
+                 
                  
                          
                  list[uniqId] = new ymaps.Placemark(startCoords,{
@@ -303,7 +317,7 @@
                     changeRoutesTable(selection2);
                     //changeIframe(selection2);
                     
-                    tt.text('Старт').attr('data-status','1');
+                    tt.html('<i class="bi bi-play"></i>').attr('data-status','1');
                     return false;
                  }
                  
@@ -316,7 +330,7 @@
                  changeMap(selection); 
                }, 100 );
                
-               tt.text('Стоп').attr('data-status','2');
+               tt.html('<i class="bi bi-pause"></i>').attr('data-status','2');
                tt.attr('data-interval',intervalId);
                
                // подгружаем таб. со всеми кораблями
@@ -331,7 +345,7 @@
                changeRoutesTable(selection2);
                //changeIframe(selection2);
 
-               tt.text('Старт').attr('data-status','1');
+               tt.html('<i class="bi bi-play"></i>').attr('data-status','1');
            }
           
        });

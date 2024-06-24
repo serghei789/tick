@@ -5,7 +5,7 @@ def get_sailing(wish,  max_cohesion):
 
     if sailing == 'S':
         # Может плыть самостоятельно
-        necessity = 0
+        necessity = 25
     elif sailing == 'P':
         # Нужна проводка
         necessity = 100

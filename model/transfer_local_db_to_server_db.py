@@ -8,7 +8,7 @@ from passwords import dbBackup, dbServer, dbLocal
 
 def transfer_db(_from='local',_to='server', include_tables=()):
    start_time = time.time()
-   print('Скрипт запущен')
+   # print('Скрипт запущен')
 
    if _from=='backup':
        from_db = dbBackup

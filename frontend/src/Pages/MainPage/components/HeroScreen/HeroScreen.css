@@ -1,0 +1,58 @@
+.background {
+    background-image: url('../../../../assets/images/banner/banner.svg');
+    background-size: cover;
+    background-position: center;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    padding-top: 20%;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.overlay {
+    background-color: #ecf3fa;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.title {
+    color: black;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.form-container {
+    display: flex;
+    align-items: center;
+}
+
+.input-field {
+    margin: 5px;
+    height: 41px;
+}
+
+.swap-button svg {
+    fill: white;
+}
+
+.submit-button {
+    background-color: #2c63f1;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+@media screen and (max-width: 500px) {
+    .form-container {
+        flex-direction: column;
+    }
+}

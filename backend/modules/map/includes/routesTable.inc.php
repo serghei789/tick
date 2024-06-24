@@ -28,4 +28,4 @@
     <?endforeach;?>
   </tbody>
 
-  </table>
+</table>

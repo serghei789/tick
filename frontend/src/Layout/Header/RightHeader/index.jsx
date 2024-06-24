@@ -2,8 +2,10 @@ import React, { Fragment } from 'react';
 
 import Searchbar from './Searchbar';
 import MoonLight from './MoonLight';
+import Notifications from "./Notifications";
 import { UL } from '../../../AbstractElements';
 import { Col } from 'reactstrap';
+import TotalBackup from "./TotalBackup";
 
 const RightHeader = () => {
   return (
@@ -12,6 +14,8 @@ const RightHeader = () => {
         <UL attrUL={{ className: 'simple-list nav-menus flex-row' }}>
           <Searchbar />
           <MoonLight />
+          <Notifications />
+          <TotalBackup />
         </UL>
       </Col>
     </Fragment>
