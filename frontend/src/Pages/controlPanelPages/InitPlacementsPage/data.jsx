@@ -1,3 +1,7 @@
+import {
+    SailingSectionName
+} from "../../../Constant";
+
 export const getTableColumns = (onEdit, onDelete) => [
     {
         name: 'imo',
